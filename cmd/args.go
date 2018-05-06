@@ -51,7 +51,7 @@ type Args struct {
 
 func GetArgs() *Args{
 	// Parse args here later
-	Filename := flag.String("filename", "TESTDATA/ze_bioshock_v6_2.bsp", "filename=<string>") // Added here
+	Filename := flag.String("filename", "../bsp/maps/v20/ze_bioshock_v6_2.bsp", "filename=<string>") // Added here
 	StaticPropLighting := flag.Bool("StaticPropLighting", false, "")
 	StaticPropNormals := flag.Bool("StaticPropNormals", false, "")
 	OnlyStaticProps := flag.Bool("OnlyStaticProps", false, "")

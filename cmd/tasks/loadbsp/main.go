@@ -225,7 +225,7 @@ func addBrushToRaytraceEnvironment(brush *brush2.Brush, xform *matrix.Mat4) {
 				fullCoverage := mgl32.Vec3{1.0,0,0}
 				raytracer.GetEnvironment().AddTriangle(raytracer.TRACE_ID_OPAQUE, &v0, &v1, &v2, &fullCoverage)
 			}
-			//FreeWinding(w)
+			polygon.FreeWinding(w)
 		}
 	}
 }

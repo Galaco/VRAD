@@ -1,20 +1,35 @@
 package polygon
 
 import (
-	"github.com/galaco/bsp/primitives/common"
 	"math"
 	"log"
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/galaco/vrad/vmath/vector"
+	"github.com/galaco/vrad/common/constants"
 )
 
 const MAX_POINTS_ON_WINDING = 64
 const TEMPCONST_NUM_THREADS = 1
 
-func BaseWindingForPlane(normal *mgl32.Vec3, dist float32) *common.Winding {
+type Winding struct {
+	NumPoints int
+	Points []mgl32.Vec3
+	MaxPoints int
+	Next *Winding
+}
+
+var windingPool [MAX_POINTS_ON_WINDING+4]*Winding
+var c_active_windings int
+var c_peak_windings int
+var c_winding_allocs int
+var c_winding_points int
+
+
+func BaseWindingForPlane(normal *mgl32.Vec3, dist float32) *Winding {
 	var x int
 	var v,max float32
 	var org, vright, vup mgl32.Vec3
-	var w *common.Winding
+	var w *Winding
 
 	// Find the major axis
 	max = -1
@@ -42,13 +57,13 @@ func BaseWindingForPlane(normal *mgl32.Vec3, dist float32) *common.Winding {
 
 	v = vup.Dot(*normal)
 	//@TODO what is this doing? see all VectorScale & VectorMA calls
-	//VectorMA (vup, -v, normal, vup);
+	vector.MA(&vup, -v, normal, &vup)
 	vup = vup.Normalize()
-	//VectorScale (normal, dist, org);
+	vector.Scale(normal, dist, &org)
 
 	vright = vup.Cross(*normal)
-	//VectorScale (vup, (MAX_COORD_INTEGER*4), vup);
-	//VectorScale (vright, (MAX_COORD_INTEGER*4), vright);
+	vector.Scale(&vup, constants.MAX_COORD_INTEGER * 4, &vup)
+	vector.Scale(&vright, constants.MAX_COORD_INTEGER * 4, &vright)
 
 	// project a really big	axis aligned box onto the plane
 	w = NewWinding(4)
@@ -70,16 +85,15 @@ func BaseWindingForPlane(normal *mgl32.Vec3, dist float32) *common.Winding {
 	return w
 }
 
-
-func ChopWindingInPlace(inOut **common.Winding, normal *mgl32.Vec3, dist float32, epsilon float32) {
-	var in *common.Winding
+func ChopWindingInPlace(inOut **Winding, normal *mgl32.Vec3, dist float32, epsilon float32) {
+	var in *Winding
 	var dists [MAX_POINTS_ON_WINDING + 4]float32
 	var sides [MAX_POINTS_ON_WINDING + 4]int
 	counts := [3]int{0,0,0}
 	var dot float32
 	var i, j int
 	mid := mgl32.Vec3{0,0,0}
-	var f *common.Winding
+	var f *Winding
 	var maxpts int
 
 	in = *inOut
@@ -102,7 +116,7 @@ func ChopWindingInPlace(inOut **common.Winding, normal *mgl32.Vec3, dist float32
 	dists[i] = dists[0]
 
 	if 0 == counts[0]  {
-		//FreeWinding(in)
+		FreeWinding(in)
 		*inOut = nil
 		return
 	}
@@ -157,59 +171,47 @@ func ChopWindingInPlace(inOut **common.Winding, normal *mgl32.Vec3, dist float32
 		log.Fatal("ClipWinding: MAX_POINTS_ON_WINDING")
 	}
 
-	//FreeWinding(in)
+	FreeWinding(in)
 	*inOut = f
 }
 
-func freeWinding(w *common.Winding) {
-	//if w.NumPoints == 0xdeaddead {
-	//	log.Fatal("FreeWinding: freed a freed winding")
-	//}
+func FreeWinding(w *Winding) {
+	if w.NumPoints == 0xdeaddead {
+		log.Fatal("FreeWinding: freed a freed winding")
+	}
 
 	// ThreadLock()
-	//w.NumPoints = 0xdeaddead
-/**
-if (w->numpoints == 0xdeaddead)
-		Error ("FreeWinding: freed a freed winding");
-
-	ThreadLock();
-	w->numpoints = 0xdeaddead; // flag as freed
-	w->next = winding_pool[w->maxpoints];
-	winding_pool[w->maxpoints] = w;
-	ThreadUnlock();
- */
+	w.NumPoints = 0xdeaddead
+	w.Next = windingPool[w.MaxPoints]
+	windingPool[w.MaxPoints] = w
+	//ThreadUnlock();
 }
 
-
 // @TODO This function does a load of stuff to externals.
-func NewWinding(n int) *common.Winding {
-	return &common.Winding{}
-/**
-winding_t	*w;
+func NewWinding(points int) *Winding {
+	var w *Winding
 
-	if (numthreads == 1)
-	{
-		c_winding_allocs++;
-		c_winding_points += points;
-		c_active_windings++;
-		if (c_active_windings > c_peak_windings)
-			c_peak_windings = c_active_windings;
+	//@TODO Use numthreads NOT 1
+	if 1 == 1 {
+		c_winding_allocs++
+		c_winding_points += points
+		c_active_windings++
+		if c_active_windings > c_peak_windings{
+			c_peak_windings = c_active_windings
+		}
 	}
-	ThreadLock();
-	if (winding_pool[points])
-	{
-		w = winding_pool[points];
-		winding_pool[points] = w->next;
+	//ThreadLock();
+	if len(windingPool) >= points {
+		w = windingPool[points]
+		windingPool[points] = w.Next
+	} else {
+		w = &Winding{}
+		w.Points = make([]mgl32.Vec3, points)
 	}
-	else
-	{
-		w = (winding_t *)malloc(sizeof(*w));
-		w->p = (Vector *)calloc( points, sizeof(Vector) );
-	}
-	ThreadUnlock();
-	w->numpoints = 0; // None are occupied yet even though allocated.
-	w->maxpoints = points;
-	w->next = NULL;
-	return w;
- */
+	//ThreadUnlock
+	w.NumPoints = 0 // None are occupied yet even though allocated.
+	w.MaxPoints = points
+	w.Next = nil
+
+	return w
 }
