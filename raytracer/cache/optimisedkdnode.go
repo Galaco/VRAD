@@ -43,7 +43,7 @@ func (node *OptimisedKDNode) NumberOfTrianglesInLeaf() int{
 }
 
 
-func (node *OptimisedKDNode) SetNumberOfTrianglesInLeaf(n int) int{
+func (node *OptimisedKDNode) SetNumberOfTrianglesInLeaf(n int) {
 	//assert node.NodeType==KDNODE_STATE_LEAF
 	 node.SplittingPlaneValue = float32(n)
 }

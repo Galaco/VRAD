@@ -5,19 +5,22 @@ import (
 	"strconv"
 	"log"
 	"strings"
-	"github.com/galaco/vrad/common"
 	"github.com/galaco/vrad/cmd"
-	"github.com/galaco/vrad/vmath/vector"
 	"github.com/galaco/vrad/vmath/matrix"
 	"github.com/galaco/bsp"
-	"github.com/galaco/bsp/lumps"
-	"github.com/galaco/bsp/primitives/mapflags"
 	"github.com/galaco/bsp/primitives/face"
 	"github.com/galaco/vmf"
 	"github.com/galaco/bsp/primitives/model"
-	"github.com/galaco/vrad/loadbsp/brush"
+	"github.com/galaco/vrad/cmd/tasks/loadbsp/brush"
+	brush2 "github.com/galaco/bsp/primitives/brush"
+	"github.com/galaco/bsp/flags"
+	"github.com/galaco/vrad/cache"
+	"github.com/galaco/vrad/vmath/polygon"
+	"github.com/go-gl/mathgl/mgl32"
+	"github.com/galaco/vrad/raytracer"
 )
 
+// Main command function.
 func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 	if args.LowPriority == true {
 		// Go doesnt really support this...
@@ -38,12 +41,11 @@ func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 	if err != nil {
 		return nil,err
 	}
-	common.GLOBALSET_BSP(file)
+	cache.BuildLumpCache(file)
 
 	//g_pFullFileSystem->AddSearchPath(source, "GAME", PATH_ADD_TO_HEAD);
 	//g_pFullFileSystem->AddSearchPath(source, "MOD", PATH_ADD_TO_HEAD);
-	mapFlagsLump := (*common.GLOBALGET_BSP().GetLump(bsp.LUMP_MAP_FLAGS).GetContents()).(lumps.MapFlags)
-	mapFlags := mapFlagsLump.GetData().(*mapflags.MapFlags)
+	mapFlags := cache.GetLumpCache().MapFlags
 	if args.StaticPropLighting {
 		mask := 0x00000002
 		if args.HDR {
@@ -59,15 +61,15 @@ func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 	var targetFaces []face.Face
 	var numFaces = 0
 	if args.HDR == true {
-		targetFaces = (*common.GLOBALGET_BSP().GetLump(bsp.LUMP_FACES_HDR).GetContents()).(lumps.FaceHDR).GetData().([]face.Face)
+		targetFaces = cache.GetLumpCache().FacesHDR
 		if len(targetFaces) == 0 {
-			numFaces = len((*common.GLOBALGET_BSP().GetLump(bsp.LUMP_FACES).GetContents()).(lumps.Face).GetData().([]face.Face))
+			numFaces = len(cache.GetLumpCache().Faces)
 		}
 	} else {
-		targetFaces = *(*common.GLOBALGET_BSP().GetLump(bsp.LUMP_FACES).GetContents()).(lumps.Face).GetData().(*[]face.Face)
+		targetFaces = cache.GetLumpCache().Faces
 	}
 
-	entData := (*common.GLOBALGET_BSP().GetLump(bsp.LUMP_ENTITIES).GetContents()).(lumps.EntData)
+	entData := cache.GetLumpCache().EntData
 	entImportAsVmfBlock,err := parseEntities(&entData)
 	entities := entImportAsVmfBlock.Unclassified
 
@@ -119,8 +121,11 @@ func loadBSP(filename string) (*bsp.Bsp,error){
 	return reader.Read()
 }
 
-func parseEntities(data *lumps.EntData) (vmf.Vmf,error) {
-	stringReader := strings.NewReader(*data.GetData().(*string))
+// Parse Entity block.
+// Vmf lib is actually capable of doing this;
+// contents are loaded into Vmf.Unclassified
+func parseEntities(data *string) (vmf.Vmf,error) {
+	stringReader := strings.NewReader(*data)
 	reader := vmf.NewReader(stringReader)
 
 	return reader.Read()
@@ -130,18 +135,18 @@ func parseEntities(data *lumps.EntData) (vmf.Vmf,error) {
 // Some brush entities can cast shadows.
 // We need to make a note of them
 func ExtractBrushEntityShadowCasters(entities *vmf.Node) {
-	models := (*common.GLOBALGET_BSP().GetLump(bsp.LUMP_MODELS).GetContents()).(lumps.Model).GetData().(*[]model.Model)
+	models := cache.GetLumpCache().Models
 	for _,iEntity := range *entities.GetAllValues() {
 		entity := iEntity.(vmf.Node)
 		if entity.HasProperty("vrad_brush_cast_shadows") == true {
 			splOrigin := strings.Split(entity.GetProperty("origin"), " ")
 			splAngles := strings.Split(entity.GetProperty("angles"), " ")
-			origin := vector.Vec3{}
+			origin := mgl32.Vec3{}
 			for i,sf := range splOrigin {
 				f,_ := strconv.ParseFloat(sf, 32)
 				origin[i] = float32(f)
 			}
-			angles := vector.Vec3{}
+			angles := mgl32.Vec3{}
 			for i,sf := range splAngles {
 				f,_ := strconv.ParseFloat(sf, 32)
 				angles[i] = float32(f)
@@ -150,11 +155,12 @@ func ExtractBrushEntityShadowCasters(entities *vmf.Node) {
 			xform := matrix.Mat4{}
 			xform.SetupMatrixOrgAngles( &origin, &angles )
 			// Adds to raytrace environment
-			addBrushes(brushmodelForEntity(&entity, models), xform)
+			addBrushes(brushmodelForEntity(&entity, &models), xform)
 		}
 	}
 }
 
+//Find brushmodel for associated index
 func brushmodelForEntity(entity *vmf.Node, models *[]model.Model) *model.Model {
 	modelName := entity.GetProperty("model")
 	if len(modelName) > 1 {
@@ -168,34 +174,61 @@ func brushmodelForEntity(entity *vmf.Node, models *[]model.Model) *model.Model {
 	return nil
 }
 
+// Add brushes (NOTE: PLURAL) from a modal to raytracer environment
 func addBrushes(model *model.Model, xform matrix.Mat4) {
 	if model != nil {
 		brushList := []int{}
 
 		brush.GetBrushRecursive(int(model.HeadNode), &brushList)
 		for i := 0; i < len(brushList); i++ {
-			//ndxBrush := brushList[i]
-			//AddBrushToRaytraceEnvironment( &dbrushes[ndxBrush], xform )
+			ndxBrush := brushList[i]
+			addBrushToRaytraceEnvironment( &(cache.GetLumpCache().Brushes)[ndxBrush], &xform )
 		}
 	}
 }
 
-/**
-dmodel_t *BrushmodelForEntity( entity_t *pEntity )
-{
-	const char *pModelname = ValueForKey( pEntity, "model" );
-	if ( Q_strlen(pModelname) > 1 )
-	{
-		int modelIndex = atol( pModelname + 1 );
-		if ( modelIndex > 0 && modelIndex < nummodels )
-		{
-			return &dmodels[modelIndex];
+// Add a single brush to raytrace environment
+func addBrushToRaytraceEnvironment(brush *brush2.Brush, xform *matrix.Mat4) {
+	if 0 == brush.Contents & flags.MASK_OPAQUE {
+		return
+	}
+	v0 := mgl32.Vec3{}
+	v1 := mgl32.Vec3{}
+	v2 := mgl32.Vec3{}
+
+	for i := 0; i < int(brush.NumSides); i++ {
+		side := (cache.GetLumpCache().BrushSides)[int(brush.FirstSide) + i]
+		plane := (cache.GetLumpCache().Planes)[side.PlaneNum]
+		tx := (cache.GetLumpCache().TexInfo)[side.TexInfo]
+		w := polygon.BaseWindingForPlane(&plane.Normal, plane.Distance)
+
+		if tx.Flags & flags.SURF_SKY == 0 || side.DispInfo != 0 {
+			continue
+		}
+
+		for j := 0;  j < int(brush.NumSides) && w != nil; j++ {
+			if i == j {
+				continue
+			}
+			otherSide := (cache.GetLumpCache().BrushSides)[int(brush.FirstSide) + j]
+			if otherSide.Bevel != 0 {
+				continue
+			}
+			plane := (cache.GetLumpCache().Planes)[otherSide.PlaneNum ^ 1]
+			polygon.ChopWindingInPlace(&w, &plane.Normal, plane.Distance, 0)
+		}
+		if w != nil {
+			for j := 2; j < int(w.NumPoints); j++ {
+				v0 = *xform.Mul4x3(&w.Points[0])
+				v1 = *xform.Mul4x3(&w.Points[j - 1])
+				v2 = *xform.Mul4x3(&w.Points[j])
+				fullCoverage := mgl32.Vec3{1.0,0,0}
+				raytracer.GetEnvironment().AddTriangle(raytracer.TRACE_ID_OPAQUE, &v0, &v1, &v2, &fullCoverage)
+			}
+			//FreeWinding(w)
 		}
 	}
-	return NULL;
 }
- */
-
 
 /**
 ThreadSetDefault ();

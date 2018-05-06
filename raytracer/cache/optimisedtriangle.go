@@ -1,6 +1,9 @@
 package cache
 
-import "github.com/galaco/vrad/raytracer/cache/triangle"
+import (
+	"github.com/galaco/vrad/raytracer/cache/triangle"
+	"github.com/go-gl/mathgl/mgl32"
+)
 
 const PLANECHECK_POSITIVE = 1
 const PLANECHECK_NEGATIVE = -1
@@ -12,6 +15,14 @@ type OptimisedTriangle struct {
 	// Should be verified.
 	TriIntersectData triangle.TriIntersectData
 	TriGeometryData triangle.TriGeometryData
+}
+
+func (t *OptimisedTriangle) Vertex(index int) mgl32.Vec3{
+	return mgl32.Vec3{
+		t.TriGeometryData.VertexCoordData[(3*index)+1],
+		t.TriGeometryData.VertexCoordData[(3*index)+1],
+		t.TriGeometryData.VertexCoordData[(3*index)+1],
+	}
 }
 
 func (t *OptimisedTriangle) ChangeIntoIntersectionFormat() {
@@ -84,6 +95,7 @@ func (t *OptimisedTriangle) ClassifyAgainstAxisSplit(splitPlane int, splitValue 
 		return PLANECHECK_POSITIVE;
 	return PLANECHECK_STRADDLING;
 	 */
+	 return 0;
 }
 
 

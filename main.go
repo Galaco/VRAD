@@ -3,11 +3,11 @@ package main
 import (
 	"github.com/galaco/vrad/cmd"
 	"log"
-	"github.com/galaco/vrad/start"
-	"github.com/galaco/vrad/loadbsp"
-	"github.com/galaco/vrad/computerad"
-	"github.com/galaco/vrad/computerotherlighting"
-	"github.com/galaco/vrad/finish"
+	"github.com/galaco/vrad/cmd/tasks/start"
+	"github.com/galaco/vrad/cmd/tasks/loadbsp"
+	"github.com/galaco/vrad/cmd/tasks/computerad"
+	"github.com/galaco/vrad/cmd/tasks/computerotherlighting"
+	"github.com/galaco/vrad/cmd/tasks/finish"
 )
 
 func main() {
