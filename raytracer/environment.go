@@ -20,7 +20,7 @@ var rayTracerEnvironment Environment
 
 func GetEnvironment() *Environment {
 	if &rayTracerEnvironment == nil {
-		rayTracerEnvironment = Environment{}
+		rayTracerEnvironment = *NewEnvironment()
 	}
 
 	return &rayTracerEnvironment
