@@ -8,7 +8,6 @@ import (
 	"github.com/galaco/vrad/cmd"
 	"github.com/galaco/vrad/vmath/matrix"
 	"github.com/galaco/bsp"
-	"github.com/galaco/bsp/primitives/face"
 	"github.com/galaco/vmf"
 	"github.com/galaco/bsp/primitives/model"
 	"github.com/galaco/vrad/cmd/tasks/loadbsp/brush"
@@ -58,6 +57,7 @@ func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 	}
 	cache.BuildLumpCache(file)
 
+	//@TODO
 	//g_pFullFileSystem->AddSearchPath(source, "GAME", PATH_ADD_TO_HEAD);
 	//g_pFullFileSystem->AddSearchPath(source, "MOD", PATH_ADD_TO_HEAD);
 	mapFlags := cache.GetLumpCache().MapFlags
@@ -73,15 +73,14 @@ func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 	}
 
 	// Determine face target
-	var targetFaces []face.Face
 	var numFaces = 0
 	if args.HDR == true {
-		targetFaces = cache.GetLumpCache().FacesHDR
-		if len(targetFaces) == 0 {
+		cache.SetTargetFaces(&cache.GetLumpCache().FacesHDR)
+		if len(*cache.GetTargetFaces()) == 0 {
 			numFaces = len(cache.GetLumpCache().Faces)
 		}
 	} else {
-		targetFaces = cache.GetLumpCache().Faces
+		cache.SetTargetFaces(&cache.GetLumpCache().Faces)
 	}
 
 	entData := cache.GetLumpCache().EntData
@@ -90,6 +89,7 @@ func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 
 	ExtractBrushEntityShadowCasters(&entities)
 
+	//@TODO
 	//StaticPropMgr()->Init();
 	//StaticDispMgr()->Init();
 
@@ -113,7 +113,6 @@ func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 	// TODO: change the maxes to the amount from the bsp!!
 	//
 	//	g_Patches.EnsureCapacity( MAX_PATCHES );
-
 	for ndx := 0; ndx < constants.MAX_MAP_FACES; ndx++ {
 		cache.SetFacePatch(ndx, -1)
 		cache.SetFaceParent(ndx, -1)
@@ -122,6 +121,41 @@ func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 	for ndx := 0; ndx < constants.MAX_MAP_CLUSTERS; ndx++ {
 		cache.SetClusterChild(ndx, -1)
 	}
+
+	// Setup ray tracer
+	addBrushesForRayTrace()
+	// @TODO
+	//StaticDispMgr()->AddPolysForRayTrace();
+	//StaticPropMgr()->AddPolysForRayTrace();
+
+	// Dump raytracer for glview
+	//@TODO
+	//if g_bDumpRtEnv {
+	//	WriteRTEnv("trace.txt");
+	//}
+
+	// Build acceleration structure
+	log.Println("Setting up ray-trace acceleration structure... ")
+
+	//@TODO Actually log prep time properly. THis doesnt give seconds
+	//setupStart := time.Now().UnixNano() / int64(time.Millisecond)
+	raytracer.GetEnvironment().SetupAccelerationStructure()
+	//setupEnd := time.Now().UnixNano() / int64(time.Millisecond)
+	//log.Printf("Done (%f seconds)\n", (setupEnd-setupStart) / 1000)
+
+/**
+	RadWorld_Start();
+
+	// Setup incremental lighting.
+	if( g_pIncremental )
+	{
+		if( !g_pIncremental->Init( source, incrementfile ) )
+		{
+			Error( "Unable to load incremental lighting file in %s.\n", incrementfile );
+			return;
+		}
+	}
+ */
 
 	return numFaces,nil
 }
@@ -244,171 +278,62 @@ func addBrushToRaytraceEnvironment(brush *brush2.Brush, xform *matrix.Mat4) {
 	}
 }
 
-/**
-ThreadSetDefault ();
-
-	g_flStartTime = Plat_FloatTime();
-
-	if( g_bLowPriority )
-	{
-		SetLowPriority();
+func addBrushesForRayTrace() {
+	if len(cache.GetLumpCache().Models) == 0 {
+		return
 	}
 
-	strcpy( level_name, source );
+	identity := matrix.Mat4{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+	identity.Identity()
 
-	// This must come after InitFileSystem because the file system pointer might change.
-	if ( g_bDumpPatches )
-		InitDumpPatchesFiles();
+	brushList := []int{}
+	brush.GetBrushRecursive(int(cache.GetLumpCache().Models[0].HeadNode), &brushList)
 
-	// This part is just for VMPI. VMPI's file system needs the basedir in front of all filenames,
-	// so we prepend qdir here.
-	strcpy( source, ExpandPath( source ) );
-
-	if ( !g_bUseMPI )
-	{
-		// Setup the logfile.
-		char logFile[512];
-		_snprintf( logFile, sizeof(logFile), "%s.log", source );
-		SetSpewFunctionLogFile( logFile );
+	for i := 0; i < len(brushList); i++ {
+		pBrush := &cache.GetLumpCache().Brushes[brushList[i]]
+		addBrushToRaytraceEnvironment(pBrush, &identity)
 	}
 
-	LoadPhysicsDLL();
+	for i := 0; i < int(cache.GetLumpCache().Models[0].NumFaces); i++ {
+		ndxFace := int(cache.GetLumpCache().Models[0].FirstFace) + i
+		tFace := &(*cache.GetTargetFaces())[ndxFace]
+		tx := &cache.GetLumpCache().TexInfo[tFace.TexInfo]
 
-	// Set the required global lights filename and try looking in qproject
-	strcpy( global_lights, "lights.rad" );
-	if ( !g_pFileSystem->FileExists( global_lights ) )
-	{
-		// Otherwise, try looking in the BIN directory from which we were run from
-		Msg( "Could not find lights.rad in %s.\nTrying VRAD BIN directory instead...\n",
-			    global_lights );
-		GetModuleFileName( NULL, global_lights, sizeof( global_lights ) );
-		Q_ExtractFilePath( global_lights, global_lights, sizeof( global_lights ) );
-		strcat( global_lights, "lights.rad" );
-	}
+		if 0 == (tx.Flags & flags.SURF_SKY) {
+			continue
+		}
 
-	// Set the optional level specific lights filename
-	strcpy( level_lights, source );
+		points := [polygon.MAX_POINTS_ON_WINDING]mgl32.Vec3{}
 
-	Q_DefaultExtension( level_lights, ".rad", sizeof( level_lights ) );
-	if ( !g_pFileSystem->FileExists( level_lights ) )
-		*level_lights = 0;
+		for j := 0; j < int(tFace.NumEdges); j++ {
+			if j > polygon.MAX_POINTS_ON_WINDING {
+				log.Fatal("***** ERROR! MAX_POINTS_ON_WINDING reached!")
+			}
 
-	ReadLightFile(global_lights);							// Required
-	if ( *designer_lights ) ReadLightFile(designer_lights);	// Command-line
-	if ( *level_lights )	ReadLightFile(level_lights);	// Optional & implied
+			if int(tFace.FirstEdge) + j >= len(cache.GetLumpCache().SurfEdges) {
+				log.Fatal("***** ERROR! face->firstedge + j >= ARRAYSIZE( dsurfedges )!")
+			}
 
-	strcpy(incrementfile, source);
-	Q_DefaultExtension(incrementfile, ".r0", sizeof(incrementfile));
-	Q_DefaultExtension(source, ".bsp", sizeof( source ));
+			surfEdge := cache.GetLumpCache().SurfEdges[int(tFace.FirstEdge) + j]
+			var v uint16
 
-	Msg( "Loading %s\n", source );
-	VMPI_SetCurrentStage( "LoadBSPFile" );
-	LoadBSPFile (source);
+			if surfEdge < 0 {
+				v = cache.GetLumpCache().Edges[-surfEdge][1]
+			} else {
+				v = cache.GetLumpCache().Edges[surfEdge][0]
+			}
 
-	// Add this bsp to our search path so embedded resources can be found
-	if ( g_bUseMPI && g_bMPIMaster )
-	{
-		// MPI Master, MPI workers don't need to do anything
-		g_pOriginalPassThruFileSystem->AddSearchPath(source, "GAME", PATH_ADD_TO_HEAD);
-		g_pOriginalPassThruFileSystem->AddSearchPath(source, "MOD", PATH_ADD_TO_HEAD);
-	}
-	else if ( !g_bUseMPI )
-	{
-		// Non-MPI
-		g_pFullFileSystem->AddSearchPath(source, "GAME", PATH_ADD_TO_HEAD);
-		g_pFullFileSystem->AddSearchPath(source, "MOD", PATH_ADD_TO_HEAD);
-	}
+			if int(v) >= len(cache.GetLumpCache().Edges) {
+				log.Fatalf("***** ERROR! v(%u) >= ARRAYSIZE( dvertexes(%d) )!", v, len(cache.GetLumpCache().Vertexes))
+			}
 
-	// now, set whether or not static prop lighting is present
-	if (g_bStaticPropLighting)
-		g_LevelFlags |= g_bHDR? LVLFLAGS_BAKED_STATIC_PROP_LIGHTING_HDR : LVLFLAGS_BAKED_STATIC_PROP_LIGHTING_NONHDR;
-	else
-	{
-		g_LevelFlags &= ~( LVLFLAGS_BAKED_STATIC_PROP_LIGHTING_HDR | LVLFLAGS_BAKED_STATIC_PROP_LIGHTING_NONHDR );
-	}
+			dv := &cache.GetLumpCache().Vertexes[v]
+			points[j] = *dv
+		}
 
-	// now, we need to set our face ptr depending upon hdr, and if hdr, init it
-	if (g_bHDR)
-	{
-		g_pFaces = dfaces_hdr;
-		if (numfaces_hdr==0)
-		{
-			numfaces_hdr = numfaces;
-			memcpy( dfaces_hdr, dfaces, numfaces*sizeof(dfaces[0]) );
+		for j := 2; j < int(tFace.NumEdges); j++ {
+			fullCoverage := mgl32.Vec3{1.0, 0, 0}
+			raytracer.GetEnvironment().AddTriangle(raytracer.TRACE_ID_SKY, &points[0], &points[j - 1], &points[j], &fullCoverage)
 		}
 	}
-	else
-	{
-		g_pFaces = dfaces;
-	}
-
-
-	ParseEntities ();
-	ExtractBrushEntityShadowCasters();
-
-	StaticPropMgr()->Init();
-	StaticDispMgr()->Init();
-
-	if (!visdatasize)
-	{
-		Msg("No vis information, direct lighting only.\n");
-		numbounce = 0;
-		ambient[0] = ambient[1] = ambient[2] = 0.1f;
-		dvis->numclusters = CountClusters();
-	}
-
-	//
-	// patches and referencing data (ensure capacity)
-	//
-	// TODO: change the maxes to the amount from the bsp!!
-	//
-//	g_Patches.EnsureCapacity( MAX_PATCHES );
-
-	g_FacePatches.SetSize( MAX_MAP_FACES );
-	faceParents.SetSize( MAX_MAP_FACES );
-	clusterChildren.SetSize( MAX_MAP_CLUSTERS );
-
-	int ndx;
-	for ( ndx = 0; ndx < MAX_MAP_FACES; ndx++ )
-	{
-		g_FacePatches[ndx] = g_FacePatches.InvalidIndex();
-		faceParents[ndx] = faceParents.InvalidIndex();
-	}
-
-	for ( ndx = 0; ndx < MAX_MAP_CLUSTERS; ndx++ )
-	{
-		clusterChildren[ndx] = clusterChildren.InvalidIndex();
-	}
-
-	// Setup ray tracer
-	AddBrushesForRayTrace();
-	StaticDispMgr()->AddPolysForRayTrace();
-	StaticPropMgr()->AddPolysForRayTrace();
-
-	// Dump raytracer for glview
-	if ( g_bDumpRtEnv )
-		WriteRTEnv("trace.txt");
-
-	// Build acceleration structure
-	printf ( "Setting up ray-trace acceleration structure... ");
-	float start = Plat_FloatTime();
-	g_RtEnv.SetupAccelerationStructure();
-	float end = Plat_FloatTime();
-	printf ( "Done (%.2f seconds)\n", end-start );
-
-#if 0  // To test only k-d build
-	exit(0);
-#endif
-
-	RadWorld_Start();
-
-	// Setup incremental lighting.
-	if( g_pIncremental )
-	{
-		if( !g_pIncremental->Init( source, incrementfile ) )
-		{
-			Error( "Unable to load incremental lighting file in %s.\n", incrementfile );
-			return;
-		}
-	}
- */
+}

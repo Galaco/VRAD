@@ -29,6 +29,8 @@ type LumpCache struct {
 	Faces []face.Face
 	Leafs []leaf.Leaf
 	LeafBrushes []uint16
+	Edges [][2]uint16
+	SurfEdges []int32
 	Models []model.Model
 	Brushes []brush.Brush
 	BrushSides []brushside.BrushSide
@@ -41,12 +43,12 @@ type LumpCache struct {
 //Well this should only be called once
 func BuildLumpCache(file *bsp.Bsp) *LumpCache {
 	// Safe to assume that cache was built if there are n>0 planes
-	if &lumpCache != nil {
+	if &lumpCache != nil && len(lumpCache.Vertexes) > 0{
 		return &lumpCache
 	}
 	lumpCache = LumpCache{}
-	lumpCache.EntData = (*file.GetLump(bsp.LUMP_ENTITIES).GetContents()).GetData().(string)
-	lumpCache.Planes = *(*file.GetLump(bsp.LUMP_PLANES).GetContents()).GetData().(*[]plane.Plane)
+	lumpCache.EntData = *(*file.GetLump(bsp.LUMP_ENTITIES).GetContents()).GetData().(*string)
+	lumpCache.Planes = (*file.GetLump(bsp.LUMP_PLANES).GetContents()).GetData().([]plane.Plane)
 	lumpCache.TexData = *(*file.GetLump(bsp.LUMP_TEXDATA).GetContents()).GetData().(*[]texdata.TexData)
 	lumpCache.Vertexes = *(*file.GetLump(bsp.LUMP_VERTEXES).GetContents()).GetData().(*[]mgl32.Vec3)
 	lumpCache.Visibility = *(*file.GetLump(bsp.LUMP_VISIBILITY).GetContents()).GetData().(*visibility.Vis)
@@ -55,6 +57,8 @@ func BuildLumpCache(file *bsp.Bsp) *LumpCache {
 	lumpCache.Faces = *(*file.GetLump(bsp.LUMP_FACES).GetContents()).GetData().(*[]face.Face)
 	lumpCache.Leafs = *(*file.GetLump(bsp.LUMP_LEAFS).GetContents()).GetData().(*[]leaf.Leaf)
 	lumpCache.LeafBrushes = *(*file.GetLump(bsp.LUMP_LEAFBRUSHES).GetContents()).GetData().(*[]uint16)
+	lumpCache.Edges = *(*file.GetLump(bsp.LUMP_EDGES).GetContents()).GetData().(*[][2]uint16)
+	lumpCache.SurfEdges = *(*file.GetLump(bsp.LUMP_SURFEDGES).GetContents()).GetData().(*[]int32)
 	lumpCache.Models = *(*file.GetLump(bsp.LUMP_MODELS).GetContents()).GetData().(*[]model.Model)
 	lumpCache.Brushes = *(*file.GetLump(bsp.LUMP_BRUSHES).GetContents()).GetData().(*[]brush.Brush)
 	lumpCache.BrushSides = *(*file.GetLump(bsp.LUMP_BRUSHSIDES).GetContents()).GetData().(*[]brushside.BrushSide)

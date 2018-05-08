@@ -201,7 +201,7 @@ func NewWinding(points int) *Winding {
 		}
 	}
 	//ThreadLock();
-	if len(windingPool) >= points {
+	if len(windingPool) >= points && windingPool[points] != nil{
 		w = windingPool[points]
 		windingPool[points] = w.Next
 	} else {

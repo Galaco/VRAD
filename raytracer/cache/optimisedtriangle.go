@@ -3,6 +3,7 @@ package cache
 import (
 	"github.com/galaco/vrad/raytracer/cache/triangle"
 	"github.com/go-gl/mathgl/mgl32"
+	"log"
 )
 
 const PLANECHECK_POSITIVE = 1
@@ -26,6 +27,7 @@ func (t *OptimisedTriangle) Vertex(index int) mgl32.Vec3{
 }
 
 func (t *OptimisedTriangle) ChangeIntoIntersectionFormat() {
+	log.Printf("optimisedtriangle: ChangeIntoIntersectionFormat NOT IMPLEMENTED")
 	/*
 	// lose the vertices and use edge equations instead
 
@@ -77,6 +79,7 @@ func (t *OptimisedTriangle) ChangeIntoIntersectionFormat() {
 }
 
 func (t *OptimisedTriangle) ClassifyAgainstAxisSplit(splitPlane int, splitValue int) int {
+	log.Printf("optimisedtriangle: ClassifyAgainstAxisSplit NOT IMPLEMENTED")
 	/*
 	// classify a triangle against an axis-aligned plane
 	float minc=Vertex(0)[split_plane];

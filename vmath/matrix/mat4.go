@@ -52,6 +52,14 @@ func (matrix *Mat4) Mul4x3(vector *mgl32.Vec3) *mgl32.Vec3 {
 	return vector3DMultiplyPosition(toInternal(matrix), vector)
 }
 
+func (matrix *Mat4) Identity() {
+	(*matrix)[0] = 1.0
+	(*matrix)[5] = 1.0
+	(*matrix)[10] = 1.0
+	(*matrix)[15] = 1.0
+
+}
+
 func vector3DMultiplyPosition(matrix *mgl32.Mat4, vector *mgl32.Vec3) *mgl32.Vec3 {
 	return &mgl32.Vec3 {
 		matrix[0] * vector[0] + matrix[1] * vector[1] + matrix[2] * vector[2] + matrix[3],

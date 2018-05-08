@@ -5,6 +5,7 @@ import (
 	"github.com/galaco/vrad/materials/light"
 	"github.com/galaco/vrad/raytracer/math"
 	"github.com/go-gl/mathgl/mgl32"
+	"log"
 )
 
 const RTE_FLAGS_FAST_TREE_GENERATION = 1
@@ -120,7 +121,7 @@ func (environment *Environment) AddAxisAlignedRectangularSolid(id int32, minCoor
 func (environment *Environment) SetupAccelerationStructure() {
 	root := cache.OptimisedKDNode{}
 	environment.OptimizedKDTree = append(environment.OptimizedKDTree, root)
-	rootTriangleList := []int{}
+	rootTriangleList := make([]int, len(environment.OptimizedTriangleList))
 
 	for t := 0; t < len(environment.OptimizedTriangleList); t++ {
 		rootTriangleList[t] = t
@@ -139,38 +140,46 @@ func (environment *Environment) SetupAccelerationStructure() {
 }
 
 func (environment *Environment) Trace4Rays() {
+	log.Printf("environment: Trace4Rays NOT IMPLEMENTED")
 
 }
 
 func (environment *Environment) Trace4RaysWithoutDirectionSign() {
+	log.Printf("environment: Trace4RaysWithoutDirectionSign NOT IMPLEMENTED")
 
 }
 
 func (environment *Environment) ComputeVirtualLightSources() {
+	log.Printf("environment: ComputeVirtualLightSources NOT IMPLEMENTED")
 
 }
 
 func (environment *Environment) RenderScene() {
+	log.Printf("environment: RenderScene NOT IMPLEMENTED")
 
 }
 
 func (environment *Environment) AddToRayStream() {
+	log.Printf("environment: AddToRayStream NOT IMPLEMENTED")
 
 }
 
 func (environment *Environment) FlushStreamEntry() {
+	log.Printf("environment: FlushStreamEntry NOT IMPLEMENTED")
 
 }
 
 func (environment *Environment) FinishRayStream() {
+	log.Printf("environment: FinishRayStream NOT IMPLEMENTED")
 
 }
 
 func (environment *Environment) MakeLeafNode(firstTri int, lastTri int) {
-
+	log.Printf("environment: MakeLeafNode NOT IMPLEMENTED")
 }
 
 func (environment *Environment) CalculateCostsOfSplit() {
+	log.Printf("environment: CalculateCostsOfSplit NOT IMPLEMENTED")
 
 }
 
@@ -181,6 +190,7 @@ func (environment *Environment) RefineNode(nodeNumber int, triangleList *[]int, 
 
 func (environment *Environment) CalculateTriangleListBounds(triangles *[]int, numTriangles int,
 	minOut *mgl32.Vec3, maxOut *mgl32.Vec3) {
+	log.Printf("environment: CalculateTriangleListBounds NOT IMPLEMENTED")
 /**
 if (ntris<3)											// never split empty lists
 	{
@@ -333,18 +343,19 @@ if (ntris<3)											// never split empty lists
 }
 
 func (environment *Environment) AddInfinitePointlight(position mgl32.Vec3, intensity mgl32.Vec3) {
-
+	log.Printf("environment: AddInfinitePointlight NOT IMPLEMENTED")
 }
 
 func (environment *Environment) InitializeFromLoadedBSP() {
-
+	log.Printf("environment: InitializeFromLoadedBSP NOT IMPLEMENTED")
 }
 
 func (environment *Environment) AddBSPFace() {
-
+	log.Printf("environment: AddBSPFace NOT IMPLEMENTED")
 }
 
 func (environment *Environment) MakeRoomForTriangles(numTriangles int) {
+	log.Printf("environment: MakeRoomForTriangles NOT IMPLEMENTED")
 
 }
 
