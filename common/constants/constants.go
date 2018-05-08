@@ -1,3 +1,5 @@
 package constants
 
 const MAX_COORD_INTEGER = 16384
+const MAX_MAP_FACES = 65536
+const MAX_MAP_CLUSTERS = 65536

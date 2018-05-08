@@ -15,6 +15,7 @@ import (
 	"github.com/galaco/bsp/primitives/texinfo"
 	"github.com/galaco/bsp/primitives/node"
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/galaco/bsp/primitives/visibility"
 )
 
 type LumpCache struct {
@@ -22,6 +23,7 @@ type LumpCache struct {
 	Planes []plane.Plane
 	TexData []texdata.TexData
 	Vertexes []mgl32.Vec3
+	Visibility visibility.Vis
 	Nodes []node.Node
 	TexInfo []texinfo.TexInfo
 	Faces []face.Face
@@ -47,6 +49,7 @@ func BuildLumpCache(file *bsp.Bsp) *LumpCache {
 	lumpCache.Planes = *(*file.GetLump(bsp.LUMP_PLANES).GetContents()).GetData().(*[]plane.Plane)
 	lumpCache.TexData = *(*file.GetLump(bsp.LUMP_TEXDATA).GetContents()).GetData().(*[]texdata.TexData)
 	lumpCache.Vertexes = *(*file.GetLump(bsp.LUMP_VERTEXES).GetContents()).GetData().(*[]mgl32.Vec3)
+	lumpCache.Visibility = *(*file.GetLump(bsp.LUMP_VISIBILITY).GetContents()).GetData().(*visibility.Vis)
 	lumpCache.Nodes = *(*file.GetLump(bsp.LUMP_NODES).GetContents()).GetData().(*[]node.Node)
 	lumpCache.TexInfo = *(*file.GetLump(bsp.LUMP_TEXINFO).GetContents()).GetData().(*[]texinfo.TexInfo)
 	lumpCache.Faces = *(*file.GetLump(bsp.LUMP_FACES).GetContents()).GetData().(*[]face.Face)

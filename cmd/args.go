@@ -67,7 +67,7 @@ func GetArgs() *Args{
 	Bounce := flag.Int("bounce", 1, "")
 	Verbose := flag.Bool("verbose", false, "")
 	Threads := flag.Int("threads", 1, "")
-	Lights := flag.String("lights", "", "")
+	Lights := flag.String("lights", "__TEST/lights.rad", "")
 	NoExtra := flag.Bool("noextra", false, "")
 	DebugExtra := flag.Bool("debugextra", false, "")
 	FastAmbient := flag.Bool("fastambient", false, "")

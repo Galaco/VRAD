@@ -18,6 +18,9 @@ import (
 	"github.com/galaco/vrad/vmath/polygon"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/galaco/vrad/raytracer"
+	"github.com/galaco/vrad/common/parser/lights-rad"
+	"github.com/galaco/vrad/common/types"
+	"github.com/galaco/vrad/common/constants"
 )
 
 // Main command function.
@@ -33,7 +36,19 @@ func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 	// Here we should prep the log file...
 
 	if args.Lights != "" {
-		// Load lights.rad!!!
+		//Try to load default lights.rad
+
+		// @TODO
+
+		// Load designer lights.rad if specified
+		// @TODO what to do with response.
+		if args.Lights != "" {
+			file,_ := os.Open(args.Lights)
+			reader := lights_rad.NewReader(file, file.Name())
+			*cache.GetTexLightCache() = make([]types.TexLight, lights_rad.MAX_TEXLIGHTS)
+			reader.Read(cache.GetTexLightCache())
+			file.Close()
+		}
 	}
 
 	log.Printf("Loading %s\n", args.Filename)
@@ -78,11 +93,18 @@ func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 	//StaticPropMgr()->Init();
 	//StaticDispMgr()->Init();
 
-	/**if !visdatasize {
+	if cache.GetLumpCache().Visibility.NumClusters == 0 {
 		log.Printf("No vis information, direct lighting only.\n")
-		numbounce = 0;
-		ambient[0] = ambient[1] = ambient[2] = 0.1
-		dvis->numclusters = CountClusters()
+		args.Bounce = 0
+		cache.GetConfig().Ambient = mgl32.Vec3{0.1, 0.1, 0.1}
+
+		// Equivalent of CountClusters
+		for i := 0; i < len(cache.GetLumpCache().Leafs); i++ {
+			if int32(cache.GetLumpCache().Leafs[i].Cluster) > cache.GetLumpCache().Visibility.NumClusters {
+				cache.GetLumpCache().Visibility.NumClusters = int32(cache.GetLumpCache().Leafs[i].Cluster)
+			}
+		}
+		cache.GetLumpCache().Visibility.NumClusters++
 	}
 
 	//
@@ -92,22 +114,14 @@ func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 	//
 	//	g_Patches.EnsureCapacity( MAX_PATCHES );
 
-	g_FacePatches.SetSize( MAX_MAP_FACES );
-	faceParents.SetSize( MAX_MAP_FACES );
-	clusterChildren.SetSize( MAX_MAP_CLUSTERS );
-
-	int ndx;
-	for ( ndx = 0; ndx < MAX_MAP_FACES; ndx++ )
-	{
-	g_FacePatches[ndx] = g_FacePatches.InvalidIndex();
-	faceParents[ndx] = faceParents.InvalidIndex();
+	for ndx := 0; ndx < constants.MAX_MAP_FACES; ndx++ {
+		cache.SetFacePatch(ndx, -1)
+		cache.SetFaceParent(ndx, -1)
 	}
 
-	for ( ndx = 0; ndx < MAX_MAP_CLUSTERS; ndx++ )
-	{
-	clusterChildren[ndx] = clusterChildren.InvalidIndex();
-	}**/
-
+	for ndx := 0; ndx < constants.MAX_MAP_CLUSTERS; ndx++ {
+		cache.SetClusterChild(ndx, -1)
+	}
 
 	return numFaces,nil
 }
