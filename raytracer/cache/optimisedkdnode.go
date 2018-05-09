@@ -15,6 +15,11 @@ const KDNODE_STATE_LEAF = 3									// this node is a leaf
 type OptimisedKDNode struct {
 	Children int
 	SplittingPlaneValue float32
+
+//#ifdef DEBUG_RAYTRACE
+	//Vector vecMins;
+	//Vector vecMaxs;
+//#endif
 }
 
 func (node *OptimisedKDNode) NodeType() int{
@@ -43,7 +48,7 @@ func (node *OptimisedKDNode) NumberOfTrianglesInLeaf() int{
 }
 
 
-func (node *OptimisedKDNode) SetNumberOfTrianglesInLeaf(n int) {
+func (node *OptimisedKDNode) SetNumberOfTrianglesInLeafNode(n int) {
 	//assert node.NodeType==KDNODE_STATE_LEAF
 	 node.SplittingPlaneValue = float32(n)
 }

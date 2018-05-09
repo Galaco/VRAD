@@ -6,7 +6,8 @@ type TriGeometryData struct {
 	VertexCoordData [9]float32								// can't use a vector in a union
 
 	NFlags uint8											// triangle flags
-	NTmpData0 byte								// used by kd-tree builder
-	NTmpData1 byte								// used by kd-tree builder
+	// @TODO Signed chars. Is this okay?
+	NTmpData0 int8								// used by kd-tree builder
+	NTmpData1 int8								// used by kd-tree builder
 }
 

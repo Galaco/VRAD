@@ -3,7 +3,8 @@ package cache
 import (
 	"github.com/galaco/vrad/raytracer/cache/triangle"
 	"github.com/go-gl/mathgl/mgl32"
-	"log"
+	"math"
+	"github.com/galaco/vrad/vmath/polygon"
 )
 
 const PLANECHECK_POSITIVE = 1
@@ -18,7 +19,7 @@ type OptimisedTriangle struct {
 	TriGeometryData triangle.TriGeometryData
 }
 
-func (t *OptimisedTriangle) Vertex(index int) mgl32.Vec3{
+func (t *OptimisedTriangle) Vertex(index int) mgl32.Vec3 {
 	return mgl32.Vec3{
 		t.TriGeometryData.VertexCoordData[(3*index)+1],
 		t.TriGeometryData.VertexCoordData[(3*index)+1],
@@ -27,78 +28,78 @@ func (t *OptimisedTriangle) Vertex(index int) mgl32.Vec3{
 }
 
 func (t *OptimisedTriangle) ChangeIntoIntersectionFormat() {
-	log.Printf("optimisedtriangle: ChangeIntoIntersectionFormat NOT IMPLEMENTED")
-	/*
 	// lose the vertices and use edge equations instead
 
 	// grab the whole original triangle to we don't overwrite it
-	TriGeometryData_t srcTri = m_Data.m_GeometryData;
+	srcTriangle := t.TriGeometryData
 
-	m_Data.m_IntersectData.m_nFlags = srcTri.m_nFlags;
-	m_Data.m_IntersectData.m_nTriangleID = srcTri.m_nTriangleID;
+	t.TriIntersectData.NFlags = srcTriangle.NFlags
+	t.TriIntersectData.NTriangleID = srcTriangle.NTriangleID
 
-	Vector p1 = srcTri.Vertex( 0 );
-	Vector p2 = srcTri.Vertex( 1 );
-	Vector p3 = srcTri.Vertex( 2 );
+	p1 := mgl32.Vec3{srcTriangle.VertexCoordData[0], srcTriangle.VertexCoordData[1], srcTriangle.VertexCoordData[2]}
+	p2 := mgl32.Vec3{srcTriangle.VertexCoordData[3], srcTriangle.VertexCoordData[4], srcTriangle.VertexCoordData[5]}
+	p3 := mgl32.Vec3{srcTriangle.VertexCoordData[6], srcTriangle.VertexCoordData[7], srcTriangle.VertexCoordData[8]}
 
-	Vector e1 = p2 - p1;
-	Vector e2 = p3 - p1;
+	e1 := p2.Sub(p1)
+	e2 := p3.Sub(p1)
 
-	Vector N = e1.Cross( e2 );
-	N.NormalizeInPlace();
+	N := e1.Cross(e2)
+	N = N.Normalize()
+
 	// now, determine which axis to drop
-	int drop_axis = 0;
-	for(int c=1 ; c<3 ; c++)
-	if ( fabs(N[c]) > fabs( N[drop_axis] ) )
-	drop_axis = c;
-
-	m_Data.m_IntersectData.m_flD = N.Dot( p1 );
-	m_Data.m_IntersectData.m_flNx = N.x;
-	m_Data.m_IntersectData.m_flNy = N.y;
-	m_Data.m_IntersectData.m_flNz = N.z;
-
-	// decide which axes to keep
-	int nCoordSelect0 = ( drop_axis + 1 ) % 3;
-	int nCoordSelect1 = ( drop_axis + 2 ) % 3;
-
-	m_Data.m_IntersectData.m_nCoordSelect0 = nCoordSelect0;
-	m_Data.m_IntersectData.m_nCoordSelect1 = nCoordSelect1;
-
-
-	Vector edge1 = GetEdgeEquation( p1, p2, nCoordSelect0, nCoordSelect1, p3 );
-	m_Data.m_IntersectData.m_ProjectedEdgeEquations[0] = edge1.x;
-	m_Data.m_IntersectData.m_ProjectedEdgeEquations[1] = edge1.y;
-	m_Data.m_IntersectData.m_ProjectedEdgeEquations[2] = edge1.z;
-
-	Vector edge2 = GetEdgeEquation( p2, p3, nCoordSelect0, nCoordSelect1, p1 );
-	m_Data.m_IntersectData.m_ProjectedEdgeEquations[3] = edge2.x;
-	m_Data.m_IntersectData.m_ProjectedEdgeEquations[4] = edge2.y;
-	m_Data.m_IntersectData.m_ProjectedEdgeEquations[5] = edge2.z;
-
-	*/
-}
-
-func (t *OptimisedTriangle) ClassifyAgainstAxisSplit(splitPlane int, splitValue int) int {
-	log.Printf("optimisedtriangle: ClassifyAgainstAxisSplit NOT IMPLEMENTED")
-	/*
-	// classify a triangle against an axis-aligned plane
-	float minc=Vertex(0)[split_plane];
-	float maxc=minc;
-	for(int v=1;v<3;v++)
-	{
-		minc=min(minc,Vertex(v)[split_plane]);
-		maxc=max(maxc,Vertex(v)[split_plane]);
+	dropAxis := 0
+	for c := 1; c <3; c++ {
+		if math.Abs(float64(N[c])) > math.Abs(float64(N[dropAxis])) {
+			dropAxis = c
+		}
 	}
 
-	if (minc>=split_value)
-		return PLANECHECK_POSITIVE;
-	if (maxc<=split_value)
-		return PLANECHECK_NEGATIVE;
-	if (minc==maxc)
-		return PLANECHECK_POSITIVE;
-	return PLANECHECK_STRADDLING;
-	 */
-	 return 0;
+	t.TriIntersectData.FlD = N.Dot(p1)
+	t.TriIntersectData.FlNx = N.X()
+	t.TriIntersectData.FlNy = N.Y()
+	t.TriIntersectData.FlNz = N.Z()
+
+	// decide which axes to keep
+	nCoordSelect0 := uint8((dropAxis + 1) % 3)
+	nCoordSelect1 := uint8((dropAxis + 2) % 3)
+
+	t.TriIntersectData.NCoordSelect0 = nCoordSelect0
+	t.TriIntersectData.NCoordSelect1 = nCoordSelect1
+
+	edge1 := polygon.GetEdgeEquation( p1, p2, int(nCoordSelect0), int(nCoordSelect1), p3 )
+	t.TriIntersectData.ProjectedEdgeEquations[0] = edge1.X()
+	t.TriIntersectData.ProjectedEdgeEquations[1] = edge1.Y()
+	t.TriIntersectData.ProjectedEdgeEquations[2] = edge1.Z()
+
+	edge2 := polygon.GetEdgeEquation( p2, p3, int(nCoordSelect0), int(nCoordSelect1), p1 )
+	t.TriIntersectData.ProjectedEdgeEquations[3] = edge2.X()
+	t.TriIntersectData.ProjectedEdgeEquations[4] = edge2.Y()
+	t.TriIntersectData.ProjectedEdgeEquations[5] = edge2.Z()
+}
+
+// @TODO Check this whole function. The original seems to be
+// some nightmare that occured during some long forgotten refactoring
+// or maybe im missing something...
+func (t *OptimisedTriangle) ClassifyAgainstAxisSplit(splitPlane int, splitValue float32) int {
+	// classify a triangle against an axis-aligned plane
+	minC := t.Vertex(0)[splitPlane]
+	maxC := minC
+
+	for v := 0; v < 3; v++ {
+		minC = float32(math.Min(float64(minC), float64(t.Vertex(v)[splitPlane])))
+		maxC = float32(math.Max(float64(maxC), float64(t.Vertex(v)[splitPlane])))
+	}
+
+	if minC >= splitValue {
+		return PLANECHECK_POSITIVE
+	}
+	if minC <= splitValue {
+		return PLANECHECK_NEGATIVE
+	}
+	if minC == maxC {
+		return PLANECHECK_POSITIVE
+	}
+	return PLANECHECK_STRADDLING
 }
 
 
