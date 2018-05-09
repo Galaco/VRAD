@@ -20,6 +20,7 @@ import (
 	"github.com/galaco/vrad/common/parser/lights-rad"
 	"github.com/galaco/vrad/common/types"
 	"github.com/galaco/vrad/common/constants"
+	"github.com/galaco/vrad/rad"
 )
 
 // Main command function.
@@ -143,20 +144,16 @@ func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 	//setupEnd := time.Now().UnixNano() / int64(time.Millisecond)
 	//log.Printf("Done (%f seconds)\n", (setupEnd-setupStart) / 1000)
 
-/**
-	RadWorld_Start();
+	rad.Start()
 
 	// Setup incremental lighting.
-	if( g_pIncremental )
-	{
-		if( !g_pIncremental->Init( source, incrementfile ) )
-		{
-			Error( "Unable to load incremental lighting file in %s.\n", incrementfile );
-			return;
+/* @TODO Not supported yet.
+	if g_pIncremental == true {
+		if !g_pIncremental.Init( args.Filename, incrementfile ) {
+			log.Println("Unable to load incremental lighting file in %s.\n", incrementfile)
 		}
 	}
- */
-
+*/
 	return numFaces,nil
 }
 
