@@ -33,7 +33,7 @@ type Args struct {
 	CenterSamples int
 	SmoothingThreshold int
 	DLightMap bool
-	LuxelDensity int
+	LuxelDensity float32
 	LowPriority bool
 	LogHashData bool
 	OnlyDetail bool
@@ -78,7 +78,7 @@ func GetArgs() *Args{
 	CenterSamples := flag.Int("centersamples", 1, "")
 	SmoothingThreshold := flag.Int("smooth", 1, "")
 	DLightMap := flag.Bool("dlightmap", false, "")
-	LuxelDensity := flag.Int("luxeldensity", 1, "")
+	LuxelDensity := flag.Float64("luxeldensity", 1.0, "")
 	LowPriority := flag.Bool("low", false, "")
 	LogHashData := flag.Bool("loghash", false, "")
 	OnlyDetail := flag.Bool("onlydetail", false, "")
@@ -122,7 +122,7 @@ func GetArgs() *Args{
 		*CenterSamples,
 		*SmoothingThreshold,
 		*DLightMap,
-		*LuxelDensity,
+		float32(*LuxelDensity),
 		*LowPriority,
 		*LogHashData,
 		*OnlyDetail,

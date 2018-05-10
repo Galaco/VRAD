@@ -21,6 +21,7 @@ import (
 	"github.com/galaco/vrad/common/types"
 	"github.com/galaco/vrad/common/constants"
 	"github.com/galaco/vrad/rad"
+	"time"
 )
 
 // Main command function.
@@ -138,13 +139,12 @@ func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 	// Build acceleration structure
 	log.Println("Setting up ray-trace acceleration structure... ")
 
-	//@TODO Actually log prep time properly. THis doesnt give seconds
-	//setupStart := time.Now().UnixNano() / int64(time.Millisecond)
+	setupStart := time.Now().UnixNano() / int64(time.Millisecond)
 	raytracer.GetEnvironment().SetupAccelerationStructure()
-	//setupEnd := time.Now().UnixNano() / int64(time.Millisecond)
-	//log.Printf("Done (%f seconds)\n", (setupEnd-setupStart) / 1000)
+	setupEnd := time.Now().UnixNano() / int64(time.Millisecond)
+	log.Printf("Done (%f seconds)\n", float32(setupEnd-setupStart) / 1000)
 
-	rad.Start()
+	rad.Start(args)
 
 	// Setup incremental lighting.
 /* @TODO Not supported yet.
