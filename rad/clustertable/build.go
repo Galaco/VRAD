@@ -1,33 +1,32 @@
 package clustertable
 
+import (
+	"github.com/galaco/vrad/common/constants"
+	"github.com/galaco/vrad/cache"
+)
 
 
 func BuildClusterTable() {
+	var leafCount int
+	var leafList [constants.MAX_MAP_LEAFS]int
 
-/**
-int i, j;
-	int leafCount;
-	int	leafList[MAX_MAP_LEAFS];
+	cache.SetClusterLeafsSize(int(cache.GetLumpCache().Visibility.NumClusters))
 
-	g_ClusterLeaves.SetCount( dvis->numclusters );
-	for ( i = 0; i < dvis->numclusters; i++ )
-	{
-		leafCount = 0;
-		for ( j = 0; j < numleafs; j++ )
-		{
-			if ( dleafs[j].cluster == i )
-			{
-				leafList[ leafCount ] = j;
-				leafCount++;
+	for i := 0; i < int(cache.GetLumpCache().Visibility.NumClusters); i++ {
+		leafCount = 0
+		for j := 0; j < len(cache.GetLumpCache().Leafs); j++ {
+			if int(cache.GetLumpCache().Leafs[j].Cluster) == i {
+				leafList[leafCount] = j
+				leafCount++
 			}
 		}
 
-		g_ClusterLeaves[i].leafCount = leafCount;
-		if ( leafCount )
-		{
-			g_ClusterLeaves[i].leafs.SetCount( leafCount );
-			memcpy( g_ClusterLeaves[i].leafs.Base(), leafList, sizeof(int) * leafCount );
+		(*cache.GetClusterLeafs())[i].LeafCount = leafCount
+		if leafCount != 0 {
+			(*cache.GetClusterLeafs())[i].Leafs = make([]int, leafCount)
+			for j := 0; j < leafCount; j++ {
+				(*cache.GetClusterLeafs())[i].Leafs[j] = leafList[j]
+			}
 		}
 	}
- */
 }

@@ -2,7 +2,6 @@ package rad
 
 import (
 	"log"
-	"github.com/galaco/vrad/raytracer"
 	"github.com/galaco/vrad/cmd"
 	"github.com/galaco/vrad/common/constants"
 	"github.com/galaco/vrad/cache"
@@ -16,14 +15,6 @@ import (
 
 func Start(config *cmd.Args) {
 	log.Println("RadWorld_Start()")
-
-	e := raytracer.GetEnvironment()
-	log.Printf("KDTree Size: %d\n", len(e.OptimizedKDTree))
-	log.Printf("TriangleIndexList Size: %d\n", len(e.TriangleIndexList))
-	log.Printf("OptimisedTriangleList Size: %d\n", len(e.OptimizedTriangleList))
-	log.Printf("TriangleMaterials Size: %d\n", len(e.TriangleMaterials))
-	log.Printf("TriangleColours Size: %d\n", len(e.TriangleColors))
-	log.Printf("LightList Size: %d\n", len(e.LightList))
 
 	if config.LuxelDensity < 1.0 {
 		// Remember the old lightmap vectors.

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/galaco/vrad/cmd"
 	"log"
+	"github.com/galaco/vrad/cmd"
 	"github.com/galaco/vrad/cmd/tasks/start"
 	"github.com/galaco/vrad/cmd/tasks/loadbsp"
 	"github.com/galaco/vrad/cmd/tasks/computerad"
