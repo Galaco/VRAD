@@ -1,8 +1,8 @@
 package cache
 
 import (
-	"github.com/galaco/vrad/common/types"
 	"github.com/galaco/vrad/common/constants"
+	"github.com/galaco/vrad/common/types"
 )
 
 var patches []types.Patch
@@ -10,8 +10,10 @@ var facePatches [constants.MAX_MAP_FACES]int
 var faceParents [constants.MAX_MAP_FACES]int
 var clusterChildren [constants.MAX_MAP_CLUSTERS]int
 
-func AddPatchToCache(patch *types.Patch) {
+func AddPatchToCache(patch *types.Patch) *types.Patch{
 	patches = append(patches, *patch)
+
+	return &(patches[(len(patches)-1)])
 }
 
 func GetPatches() *[]types.Patch{

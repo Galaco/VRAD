@@ -8,6 +8,7 @@ import (
 	"github.com/galaco/vrad/common/constants"
 	"math"
 	"log"
+	"github.com/galaco/vrad/vmath/polygon"
 )
 
 func CalcFaceExtents(s *face.Face, lightmapTextureMinsInLuxels [2]int32, lightmapTextureSizeInLuxels[2]int32) {
@@ -86,4 +87,29 @@ func CalcFaceExtents(s *face.Face, lightmapTextureMinsInLuxels [2]int32, lightma
 **/
 		}
 	}
+}
+
+func WindingFromFace(f *face.Face, origin *mgl32.Vec3) *polygon.Winding {
+	var dv *mgl32.Vec3
+	var v uint16
+	var w *polygon.Winding
+
+	w = polygon.NewWinding (int(f.NumEdges))
+	w.NumPoints = int(f.NumEdges)
+
+	for i := 0 ; i < int(f.NumEdges); i++ {
+		se := cache.GetLumpCache().SurfEdges[int(f.FirstEdge) + i]
+		if se < 0 {
+			v = (cache.GetLumpCache().Edges)[-se][1]
+		} else {
+			v = (cache.GetLumpCache().Edges)[se][0]
+		}
+
+		dv = &(cache.GetLumpCache().Vertexes[v])
+		w.Points[i] = dv.Add(*origin)
+	}
+
+	RemoveColinearPoints(w)
+
+	return w
 }

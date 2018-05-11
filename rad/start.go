@@ -11,6 +11,7 @@ import (
 	"github.com/galaco/bsp/flags"
 	"github.com/galaco/vrad/rad/world"
 	"github.com/galaco/vrad/rad/clustertable"
+	"github.com/galaco/vrad/rad/patches"
 )
 
 func Start(config *cmd.Args) {
@@ -66,7 +67,7 @@ func Start(config *cmd.Args) {
 	clustertable.BuildClusterTable()
 
 	// turn each face into a single patch
-	//MakePatches()
+	patches.MakePatches()
 	//PairEdges()
 
 	// store the vertex normals calculated in PairEdges

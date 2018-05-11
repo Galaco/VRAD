@@ -8,9 +8,6 @@ import (
 	"github.com/galaco/vrad/common/constants"
 )
 
-const MAX_POINTS_ON_WINDING = 64
-const TEMPCONST_NUM_THREADS = 1
-
 type Winding struct {
 	NumPoints int
 	Points []mgl32.Vec3
@@ -18,7 +15,7 @@ type Winding struct {
 	Next *Winding
 }
 
-var windingPool [MAX_POINTS_ON_WINDING+4]*Winding
+var windingPool [constants.MAX_POINTS_ON_WINDING+4]*Winding
 var c_active_windings int
 var c_peak_windings int
 var c_winding_allocs int
@@ -87,8 +84,8 @@ func BaseWindingForPlane(normal *mgl32.Vec3, dist float32) *Winding {
 
 func ChopWindingInPlace(inOut **Winding, normal *mgl32.Vec3, dist float32, epsilon float32) {
 	var in *Winding
-	var dists [MAX_POINTS_ON_WINDING + 4]float32
-	var sides [MAX_POINTS_ON_WINDING + 4]int
+	var dists [constants.MAX_POINTS_ON_WINDING + 4]float32
+	var sides [constants.MAX_POINTS_ON_WINDING + 4]int
 	counts := [3]int{0,0,0}
 	var dot float32
 	var i, j int
@@ -167,7 +164,7 @@ func ChopWindingInPlace(inOut **Winding, normal *mgl32.Vec3, dist float32, epsil
 	if int(f.NumPoints) > maxpts {
 		log.Fatal("ClipWinding: points exceeded estimate")
 	}
-	if f.NumPoints > MAX_POINTS_ON_WINDING {
+	if f.NumPoints > constants.MAX_POINTS_ON_WINDING {
 		log.Fatal("ClipWinding: MAX_POINTS_ON_WINDING")
 	}
 
@@ -192,7 +189,7 @@ func NewWinding(points int) *Winding {
 	var w *Winding
 
 	//@TODO Use numthreads NOT 1
-	if 1 == 1 {
+	if constants.TEMPCONST_NUM_THREADS == 1 {
 		c_winding_allocs++
 		c_winding_points += points
 		c_active_windings++
@@ -214,4 +211,50 @@ func NewWinding(points int) *Winding {
 	w.Next = nil
 
 	return w
+}
+
+
+func WindingArea(w *Winding) float32 {
+	var d1, d2, cross mgl32.Vec3
+
+	total := float32(0.0)
+	for i := 2 ; i < w.NumPoints ; i++ {
+		d1 = w.Points[i-1].Sub(w.Points[0])
+		d2 = w.Points[i].Sub(w.Points[0])
+		cross = d1.Cross(d2)
+		total += cross.Len()
+	}
+
+	return total * 0.5
+}
+
+func WindingCenter(w *Winding, center *mgl32.Vec3) {
+	center = &mgl32.Vec3{0,0,0}
+	for i := 0 ; i < w.NumPoints ; i++ {
+		c := w.Points[i].Add(*center)
+		center = &c
+	}
+	scale := float32(1.0 / w.NumPoints)
+	vector.Scale(center, scale, center)
+}
+
+func WindingBounds (w *Winding, mins *mgl32.Vec3, maxs *mgl32.Vec3) {
+	mins[0] = 99999
+	mins[1] = 99999
+	mins[2] = 99999
+	maxs[0] = -99999
+	maxs[1] = -99999
+	maxs[2] = -99999
+
+	for i := 0 ; i < w.NumPoints; i++ {
+		for j := 0; j<3 ; j++ {
+			v := w.Points[i][j]
+			if v < mins[j] {
+				mins[j] = v
+			}
+			if v > maxs[j] {
+				maxs[j] = v
+			}
+		}
+	}
 }

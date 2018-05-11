@@ -300,10 +300,10 @@ func addBrushesForRayTrace() {
 			continue
 		}
 
-		points := [polygon.MAX_POINTS_ON_WINDING]mgl32.Vec3{}
+		points := [constants.MAX_POINTS_ON_WINDING]mgl32.Vec3{}
 
 		for j := 0; j < int(tFace.NumEdges); j++ {
-			if j > polygon.MAX_POINTS_ON_WINDING {
+			if j > constants.MAX_POINTS_ON_WINDING {
 				log.Fatal("***** ERROR! MAX_POINTS_ON_WINDING reached!")
 			}
 

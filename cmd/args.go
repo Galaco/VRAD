@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"flag"
-	"log"
 )
 
 type Args struct {
@@ -93,7 +92,6 @@ func GetArgs() *Args{
 	DispChop := flag.Int("dispchop", 1, "")
 	DispPatchRadius := flag.Int("disppatchradius", 1, "")
 
-	log.Println(*Filename)
 	return &Args{
 		*Filename,
 		*StaticPropLighting,
