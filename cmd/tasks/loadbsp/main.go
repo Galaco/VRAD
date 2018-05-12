@@ -57,7 +57,7 @@ func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 	if err != nil {
 		return nil,err
 	}
-	cache.BuildLumpCache(file)
+	cache.BuildLumpCache(args.Filename, file)
 
 	//@TODO
 	//g_pFullFileSystem->AddSearchPath(source, "GAME", PATH_ADD_TO_HEAD);

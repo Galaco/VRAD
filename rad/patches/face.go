@@ -18,11 +18,14 @@ import (
 )
 
 var reflectivityScale = float32(1.0)
-var fakePlanes = int(0)
+//var fakePlanes = int(0)
 var texScale = true
 var maxChop = float32(4) // coarsest allowed number of luxel widths for a patch
 var minChop = float32(4) // "-chop" tightest number of luxel widths for a patch, used on edges
 
+// @NOTE
+// This was updated to remove the need to define fakePlanes
+// largely because of variable sized (slice) of bsp Planes lump.
 func MakePatchForFace(fn int, w *polygon.Winding) {
 	f := &(*cache.GetTargetFaces())[fn]
 	var area float32
@@ -123,12 +126,18 @@ func MakePatchForFace(fn int, w *polygon.Winding) {
 		numPlanes := len(cache.GetLumpCache().Planes)
 
 		// origin offset faces must create new planes
-		if numPlanes + fakePlanes >=constants.MAX_MAP_PLANES {
-			log.Fatal("numplanes + fakeplanes >= MAX_MAP_PLANES")
+		if numPlanes >= constants.MAX_MAP_PLANES {
+			log.Fatal("numplanes >= MAX_MAP_PLANES")
 		}
 
-		pl = &(cache.GetLumpCache().Planes[numPlanes + fakePlanes])
-		fakePlanes++
+		//log.Printf("NumPlanes total: %d, numPlanes: %d, fakePlanes: %d\n", len(cache.GetLumpCache().Planes), numPlanes, fakePlanes)
+		// Our bsplib uses slices.
+		// If we wanna generate new Planes, we need to append a new one to use directly below
+		(cache.GetLumpCache()).Planes = append(cache.GetLumpCache().Planes, plane.Plane{})
+		//log.Printf("NewSize: %d\n", len(cache.GetLumpCache().Planes))
+
+		pl = &(cache.GetLumpCache().Planes[numPlanes])
+		//fakePlanes++
 
 		*pl = *(patch.Plane)
 		pl.Distance += cache.GetFaceOffsets()[fn].Dot(pl.Normal)
@@ -139,7 +148,7 @@ func MakePatchForFace(fn int, w *polygon.Winding) {
 	polygon.WindingCenter(w, &(patch.Origin))
 
 	// Save "center" for generating the face normals later.
-	faceCentroids[fn] = patch.Origin.Sub(cache.GetFaceOffsets()[fn])
+	(cache.GetFaceCentroids()[fn]) = patch.Origin.Sub(cache.GetFaceOffsets()[fn])
 	patch.Normal = patch.Plane.Normal
 
 	polygon.WindingBounds(w, &(patch.FaceMins), &(patch.FaceMaxs))
@@ -207,7 +216,7 @@ func BaseLightForFace(f *face.Face, light *mgl32.Vec3, parea *float32, reflectiv
 	tx = &(cache.GetLumpCache().TexInfo[f.TexInfo])
 	td = &(cache.GetLumpCache().TexData[tx.TexData])
 
-	LightForTexture (TexDataStringTable_GetString( td.NameStringTableID ), light)
+	LightForTexture(cache.GetTexDataStringTable().GetString(int(td.NameStringTableID)), light)
 
 	*parea = float32(td.Height * td.Width)
 	vector.Scale(&td.Reflectivity, reflectivityScale, reflectivity)
@@ -228,20 +237,26 @@ func LightForTexture( name string, result *mgl32.Vec3 ) {
 	var baseFilename string
 
 	if strings.HasPrefix(name, "maps/") == true {
+		localName := strings.TrimLeft(name, "maps/")
 		// this might be a patch texture for cubemaps.  try to parse out the original filename.
-		if Q_strncmp( level_name, name + 5, Q_strlen( level_name ) ) == 0 {
-			const char *base = name + 5 + Q_strlen( level_name )
-			if *base == '/' {
-				base++ // step past the path separator
+		if strings.Index(localName, cache.GetLumpCache().FileName) == 0 {
+			base := strings.TrimLeft(localName, cache.GetLumpCache().FileName)
+			if string(base[0]) == "/" {
+				base = strings.TrimLeft(base, "/") // step past the path separator
 
 				// now we've gotten rid of the 'maps/level_name/' part, so we're left with
 				// 'originalName_%d_%d_%d'.
-				strcpy( baseFilename, base )
+				baseFilename = base
 				foundSeparators := true
 				for i := 0; i < 3; i++ {
-					char *underscore = Q_strrchr( baseFilename, '_' )
-					if underscore && *underscore {
-						*underscore = string('\0')
+					underscore := strings.LastIndex(baseFilename, "_")
+					if underscore != -1 {
+						// @TODO FUUUUUUCK.
+						// We *CAN* ignore this for now
+						// We MUST come back to it later, otherwise
+						// texture lights wont work!
+						//baseFilename[underscore] = texdatastringtable.StringTableNullTerminator
+						//*underscore = texdatastringtable.StringTableNullTerminator
 					} else {
 						foundSeparators = false
 					}
@@ -254,9 +269,9 @@ func LightForTexture( name string, result *mgl32.Vec3 ) {
 		}
 	}
 
-	for i := 0; i < num_texlights ; i++ {
-		if name == texlights[i].Name {
-			result = texlights[i].Value
+	for i := 0; i < len(*cache.GetTexLightCache()) ; i++ {
+		if name == (*cache.GetTexLightCache())[i].Name {
+			result = &(*cache.GetTexLightCache())[i].Value
 			return
 		}
 	}

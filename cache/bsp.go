@@ -19,6 +19,7 @@ import (
 )
 
 type LumpCache struct {
+	FileName string
 	EntData string
 	Planes []plane.Plane
 	TexData []texdata.TexData
@@ -41,7 +42,9 @@ type LumpCache struct {
 }
 
 //Well this should only be called once
-func BuildLumpCache(file *bsp.Bsp) *LumpCache {
+func BuildLumpCache(fileName string, file *bsp.Bsp) *LumpCache {
+	lumpCache.FileName = fileName
+
 	// Safe to assume that cache was built if there are n>0 planes
 	if &lumpCache != nil && len(lumpCache.Vertexes) > 0{
 		return &lumpCache
@@ -66,6 +69,10 @@ func BuildLumpCache(file *bsp.Bsp) *LumpCache {
 	lumpCache.AreaPortals = *(*file.GetLump(bsp.LUMP_AREAPORTALS).GetContents()).GetData().(*[]areaportal.AreaPortal)
 	lumpCache.MapFlags = *(*file.GetLump(bsp.LUMP_MAP_FLAGS).GetContents()).GetData().(*mapflags.MapFlags)
 	lumpCache.FacesHDR = *(*file.GetLump(bsp.LUMP_FACES_HDR).GetContents()).GetData().(*[]face.Face)
+
+	stringData := *(*file.GetLump(bsp.LUMP_TEXDATA_STRING_DATA).GetContents()).GetData().(*string)
+	stringTable := *(*file.GetLump(bsp.LUMP_TEXDATA_STRING_TABLE).GetContents()).GetData().(*[]int32)
+	CreateTexDataStringTable(stringData, stringTable)
 
 
 	return &lumpCache

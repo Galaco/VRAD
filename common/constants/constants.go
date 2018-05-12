@@ -7,6 +7,7 @@ const MAX_MAP_TEXINFO = 12288
 const MAX_MAP_LEAFS = 65536
 const MAX_MAP_NODES = 65536
 const MAX_MAP_PLANES = 65536
+const MAX_MAP_EDGES = 256000
 
 // We can have larger lightmaps on displacements
 const MAX_DISP_LIGHTMAP_DIM_WITHOUT_BORDER	= 125

@@ -22,5 +22,9 @@ Also note the lack of tests. yeah that sucks. The issue comes down to writing te
 - [ ] Refactor data import and raytracing environment preparation
 - [ ] Investigate GPU accleration options during radiosity calculations.
 
+### Known issues
+- Displacements won't be supported by the POC
+- Texture lights won't be supported by the POC
+
 #### Misc
 This is (certainly at this point in time) a port of Source Engine 2013 base code, which is freely available on Github.
