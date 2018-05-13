@@ -1,8 +1,8 @@
 package clustertable
 
 import (
-	"github.com/galaco/vrad/common/constants"
 	"github.com/galaco/vrad/cache"
+	"github.com/galaco/source-tools-common/constants"
 )
 
 

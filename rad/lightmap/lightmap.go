@@ -4,7 +4,7 @@ import (
 	"log"
 	"github.com/galaco/bsp/primitives/face"
 	"github.com/galaco/vrad/cache"
-	"github.com/galaco/vrad/common/constants"
+	"github.com/galaco/source-tools-common/constants"
 	"github.com/galaco/vrad/common/types"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/galaco/vrad/common/constants/compiler"

@@ -3,7 +3,7 @@ package cache
 import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/galaco/vrad/common/types"
-	"github.com/galaco/vrad/common/constants"
+	"github.com/galaco/source-tools-common/constants"
 )
 
 var faceEntity [constants.MAX_MAP_FACES]*types.Entity

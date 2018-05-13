@@ -4,7 +4,8 @@ import (
 	"github.com/galaco/vrad/cache"
 	"github.com/galaco/bsp/primitives/texinfo"
 	"github.com/galaco/vrad/common/types"
-	"github.com/galaco/vrad/common/constants"
+	"github.com/galaco/source-tools-common/constants"
+	vrad_constants "github.com/galaco/vrad/common/constants"
 	"github.com/galaco/vrad/vmath/polygon"
 	"github.com/galaco/bsp/flags"
 	"math"
@@ -60,12 +61,12 @@ func MakePatchForFace(fn int, w *polygon.Winding) {
 	cache.AddPatchToCache(&types.Patch{})
 	ndxPatch := len(*cache.GetPatches())
 	patch = &(*cache.GetPatches())[ndxPatch-1]
-	patch.NdxNext = constants.CONSTRUCTS_INVALID_INDEX
-	patch.NdxNextParent = constants.CONSTRUCTS_INVALID_INDEX
-	patch.NdxNextClusterChild = constants.CONSTRUCTS_INVALID_INDEX
-	patch.Child1 = constants.CONSTRUCTS_INVALID_INDEX
-	patch.Child2 = constants.CONSTRUCTS_INVALID_INDEX
-	patch.Parent = constants.CONSTRUCTS_INVALID_INDEX
+	patch.NdxNext = vrad_constants.CONSTRUCTS_INVALID_INDEX
+	patch.NdxNextParent = vrad_constants.CONSTRUCTS_INVALID_INDEX
+	patch.NdxNextClusterChild = vrad_constants.CONSTRUCTS_INVALID_INDEX
+	patch.Child1 = vrad_constants.CONSTRUCTS_INVALID_INDEX
+	patch.Child2 = vrad_constants.CONSTRUCTS_INVALID_INDEX
+	patch.Parent = vrad_constants.CONSTRUCTS_INVALID_INDEX
 	if tx.Flags & flags.SURF_BUMPLIGHT != 0 {
 		patch.NeedsBumpMap = true
 	} else {

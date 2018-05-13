@@ -19,7 +19,8 @@ import (
 	"github.com/galaco/vrad/raytracer"
 	"github.com/galaco/vrad/common/parser/lights-rad"
 	"github.com/galaco/vrad/common/types"
-	"github.com/galaco/vrad/common/constants"
+	"github.com/galaco/source-tools-common/constants"
+	vrad_constants "github.com/galaco/vrad/common/constants"
 	"github.com/galaco/vrad/rad"
 	"time"
 )
@@ -300,10 +301,10 @@ func addBrushesForRayTrace() {
 			continue
 		}
 
-		points := [constants.MAX_POINTS_ON_WINDING]mgl32.Vec3{}
+		points := [vrad_constants.MAX_POINTS_ON_WINDING]mgl32.Vec3{}
 
 		for j := 0; j < int(tFace.NumEdges); j++ {
-			if j > constants.MAX_POINTS_ON_WINDING {
+			if j > vrad_constants.MAX_POINTS_ON_WINDING {
 				log.Fatal("***** ERROR! MAX_POINTS_ON_WINDING reached!")
 			}
 

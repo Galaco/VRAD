@@ -1,8 +1,8 @@
 package cache
 
 import (
-	"github.com/galaco/vrad/common/constants"
 	"github.com/galaco/vrad/common/types"
+	"github.com/galaco/source-tools-common/constants"
 )
 
 var patches []types.Patch

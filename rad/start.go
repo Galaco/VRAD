@@ -3,7 +3,7 @@ package rad
 import (
 	"log"
 	"github.com/galaco/vrad/cmd"
-	"github.com/galaco/vrad/common/constants"
+	"github.com/galaco/source-tools-common/constants"
 	"github.com/galaco/vrad/cache"
 	"github.com/go-gl/mathgl/mgl32"
 	"math"
