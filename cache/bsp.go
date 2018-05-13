@@ -16,6 +16,8 @@ import (
 	"github.com/galaco/bsp/primitives/node"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/galaco/bsp/primitives/visibility"
+	"github.com/galaco/bsp/primitives/vertnormal"
+	"github.com/galaco/source-tools-common/constants"
 )
 
 type LumpCache struct {
@@ -39,6 +41,8 @@ type LumpCache struct {
 	AreaPortals []areaportal.AreaPortal
 	MapFlags mapflags.MapFlags
 	FacesHDR []face.Face
+	VertNormals []vertnormal.VertNormal
+	VertNormalIndices []uint16
 }
 
 //Well this should only be called once
@@ -74,6 +78,9 @@ func BuildLumpCache(fileName string, file *bsp.Bsp) *LumpCache {
 	stringTable := *(*file.GetLump(bsp.LUMP_TEXDATA_STRING_TABLE).GetContents()).GetData().(*[]int32)
 	CreateTexDataStringTable(stringData, stringTable)
 
+
+	lumpCache.VertNormals = make([]vertnormal.VertNormal, constants.MAX_MAP_VERTNORMALS)
+	lumpCache.VertNormalIndices = make([]uint16, constants.MAX_MAP_VERTNORMALINDICES)
 
 	return &lumpCache
 }

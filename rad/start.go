@@ -12,11 +12,12 @@ import (
 	"github.com/galaco/vrad/rad/world"
 	"github.com/galaco/vrad/rad/clustertable"
 	"github.com/galaco/vrad/rad/patches"
+	"github.com/galaco/vrad/rad/lightmap"
+	"time"
+	"github.com/galaco/vrad/common/constants/compiler"
 )
 
 func Start(config *cmd.Args) {
-	log.Println("RadWorld_Start()")
-
 	if config.LuxelDensity < 1.0 {
 		// Remember the old lightmap vectors.
 		oldLightmapVecs := [constants.MAX_MAP_TEXINFO][2][4]float32{}
@@ -68,15 +69,25 @@ func Start(config *cmd.Args) {
 
 	// turn each face into a single patch
 	patches.MakePatches()
-	//PairEdges()
+
+	if compiler.DEBUG == true {
+		log.Println("Pairing edges...")
+		setupStart := time.Now().UnixNano() / int64(time.Millisecond)
+		lightmap.PairEdges()
+		setupEnd := time.Now().UnixNano() / int64(time.Millisecond)
+		log.Printf("Done (%f seconds)\n", float32(setupEnd - setupStart) / 1000)
+	} else {
+		lightmap.PairEdges()
+	}
+
 
 	// store the vertex normals calculated in PairEdges
 	// so that the can be written to the bsp file for
 	// use in the engine
-	//SaveVertexNormals()
+	lightmap.SaveVertexNormals()
 
 	// subdivide patches to a maximum dimension
-	//SubdividePatches ()
+	//SubdividePatches()
 
 	// add displacement faces to cluster table
 	//AddDispsToClusterTable()
