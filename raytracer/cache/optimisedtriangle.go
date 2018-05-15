@@ -93,7 +93,7 @@ func (t *OptimisedTriangle) ClassifyAgainstAxisSplit(splitPlane int, splitValue 
 	if minC >= splitValue {
 		return PLANECHECK_POSITIVE
 	}
-	if minC <= splitValue {
+	if maxC <= splitValue {
 		return PLANECHECK_NEGATIVE
 	}
 	if minC == maxC {
