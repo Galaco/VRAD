@@ -43,7 +43,7 @@
     "primitives/worldlight",
     "versions"
   ]
-  revision = "61abe09f2c518f9c98394066b4ac4985e5a647de"
+  revision = "d855e6b95e6034da629c28f3cc7e795c933fd996"
 
 [[projects]]
   branch = "master"

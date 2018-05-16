@@ -87,7 +87,7 @@ func Start(config *cmd.Args) {
 	lightmap.SaveVertexNormals()
 
 	// subdivide patches to a maximum dimension
-	//SubdividePatches()
+	patches.SubdividePatches()
 
 	// add displacement faces to cluster table
 	//AddDispsToClusterTable()

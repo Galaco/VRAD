@@ -258,3 +258,17 @@ func WindingBounds (w *Winding, mins *mgl32.Vec3, maxs *mgl32.Vec3) {
 		}
 	}
 }
+
+/*
+==================
+CopyWinding
+==================
+*/
+// @TODO idk about this...
+// The copy seems weird
+func CopyWinding (w *Winding) *Winding {
+	c := NewWinding(w.NumPoints)
+	c.NumPoints = w.NumPoints;
+	c.Points = w.Points
+	return c
+}
