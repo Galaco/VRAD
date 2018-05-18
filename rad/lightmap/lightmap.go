@@ -19,6 +19,9 @@ var faceNeighbour [constants.MAX_MAP_FACES]types.FaceNeighbour
 // @TODO --smoothing parameter should override this
 var smoothingThreshold = float32(0.7071067) // cos(45.0*(M_PI/180))
 var computedNumVertNormalIndices = int(0)
+var activeLights *types.DirectLight
+var numDirectLights = 0
+
 
 func PairEdges() {
 	var k, m, n int
@@ -179,7 +182,7 @@ func PairEdges() {
 		}
 
 
-		if compiler.DEBUG == true {
+		if compiler.DEBUG_LEVEL > 7 {
 			log.Printf("DEBUG: PairingEdges: Copy neighbours for face: %d\n", i)
 		}
 		if numNeighbours > 0 {
@@ -191,7 +194,7 @@ func PairEdges() {
 			}
 		}
 
-		if compiler.DEBUG == true {
+		if compiler.DEBUG_LEVEL > 7 {
 			log.Printf("DEBUG: PairingEdges: Fixup normals for face: %d\n", i)
 		}
 		// fixup normals

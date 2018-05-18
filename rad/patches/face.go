@@ -270,7 +270,9 @@ func LightForTexture( name string, result *mgl32.Vec3 ) {
 		}
 	}
 
+	//log.Printf("%s\n", name)
 	for i := 0; i < len(*cache.GetTexLightCache()) ; i++ {
+		//log.Printf("%s\n", (*cache.GetTexLightCache())[i].Name)
 		if name == (*cache.GetTexLightCache())[i].Name {
 			result = &(*cache.GetTexLightCache())[i].Value
 			return

@@ -43,6 +43,7 @@ type LumpCache struct {
 	FacesHDR []face.Face
 	VertNormals []vertnormal.VertNormal
 	VertNormalIndices []uint16
+	VisDataRaw []byte
 }
 
 //Well this should only be called once
@@ -73,6 +74,8 @@ func BuildLumpCache(fileName string, file *bsp.Bsp) *LumpCache {
 	lumpCache.AreaPortals = *(*file.GetLump(bsp.LUMP_AREAPORTALS).GetContents()).GetData().(*[]areaportal.AreaPortal)
 	lumpCache.MapFlags = *(*file.GetLump(bsp.LUMP_MAP_FLAGS).GetContents()).GetData().(*mapflags.MapFlags)
 	lumpCache.FacesHDR = *(*file.GetLump(bsp.LUMP_FACES_HDR).GetContents()).GetData().(*[]face.Face)
+
+	lumpCache.VisDataRaw = (*file.GetLump(bsp.LUMP_VISIBILITY).GetContents()).ToBytes()
 
 	stringData := *(*file.GetLump(bsp.LUMP_TEXDATA_STRING_DATA).GetContents()).GetData().(*string)
 	stringTable := *(*file.GetLump(bsp.LUMP_TEXDATA_STRING_TABLE).GetContents()).GetData().(*[]int32)

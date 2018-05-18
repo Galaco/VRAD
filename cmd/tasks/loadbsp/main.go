@@ -18,6 +18,7 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/galaco/vrad/raytracer"
 	"github.com/galaco/vrad/common/parser/lights-rad"
+	entitiesparser "github.com/galaco/vrad/common/parser/entities"
 	"github.com/galaco/vrad/common/types"
 	"github.com/galaco/source-tools-common/constants"
 	vrad_constants "github.com/galaco/vrad/common/constants"
@@ -89,6 +90,9 @@ func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 	entData := cache.GetLumpCache().EntData
 	entImportAsVmfBlock,err := parseEntities(&entData)
 	entities := entImportAsVmfBlock.Unclassified
+
+	//@TODO THis should not be done this late!
+	cache.SetEntityList(entitiesparser.Parse(entities))
 
 	ExtractBrushEntityShadowCasters(&entities)
 

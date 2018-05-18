@@ -93,11 +93,10 @@ func Start(config *cmd.Args) {
 	//AddDispsToClusterTable()
 
 	// create directlights out of patches and lights
-	//CreateDirectLights ()
+	lightmap.CreateDirectLights()
 
 	// set up sky cameras
 	//ProcessSkyCameras()
-
 }
 
 func UpdateAllFaceLightmapExtents() {

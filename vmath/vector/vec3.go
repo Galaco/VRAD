@@ -15,3 +15,7 @@ func Scale(in *mgl32.Vec3, scale float32, result *mgl32.Vec3) {
 	result[1] = in[1] * scale
 	result[2] = in[2] * scale
 }
+
+func Avg(in mgl32.Vec3) float64 {
+	return float64((in.X() + in.Y() + in.Z()) / 3)
+}

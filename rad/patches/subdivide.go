@@ -6,13 +6,13 @@ import (
 	"github.com/galaco/vrad/common/constants"
 	"github.com/galaco/vrad/common/types"
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/galaco/bsp/primitives/leaf"
 	"github.com/galaco/vrad/vmath"
 	"github.com/galaco/bsp/flags"
 	"github.com/galaco/vrad/vmath/polygon"
 	"github.com/galaco/vrad/vmath/vector"
 	"math"
 	"github.com/galaco/vrad/rad/lightmap"
+	"github.com/galaco/vrad/rad/clustertable"
 )
 
 // @TODO read this from args
@@ -95,14 +95,14 @@ func SubdividePatches() {
 	// are dynamic and can be moved.  In the software renderer, they must be split exactly in order
 	// to sort per polygon.
 	for i := 0; i < uiPatchCount; i++ {
-		(*cache.GetPatches())[i].ClusterNumber = int(ClusterFromPoint(&((*cache.GetPatches())[i].Origin)))
+		(*cache.GetPatches())[i].ClusterNumber = int(clustertable.ClusterFromPoint(&((*cache.GetPatches())[i].Origin)))
 
 		//
 		// test for point in solid space (can happen with detail and displacement surfaces)
 		//
 		if (*cache.GetPatches())[i].ClusterNumber == -1 {
 			for j := 0; j < (*cache.GetPatches())[i].Winding.NumPoints; j++ {
-				clusterNumber := ClusterFromPoint( &(*cache.GetPatches())[i].Winding.Points[j])
+				clusterNumber := clustertable.ClusterFromPoint( &(*cache.GetPatches())[i].Winding.Points[j])
 				if clusterNumber != -1 {
 					(*cache.GetPatches())[i].ClusterNumber = int(clusterNumber)
 					break
@@ -158,36 +158,6 @@ func PreventSubdivision( patch *types.Patch ) bool {
 	}
 
 	return false
-}
-
-
-
-func ClusterFromPoint( point *mgl32.Vec3) int16 {
-	return PointInLeaf( 0, point ).Cluster
-}
-
-func PointInLeaf(iNode int, point *mgl32.Vec3) *leaf.Leaf {
-	if iNode < 0 {
-		return &(cache.GetLumpCache().Leafs[(-1-iNode)])
-	}
-
-	node := &(cache.GetLumpCache().Nodes[iNode])
-	plane := &cache.GetLumpCache().Planes[node.PlaneNum]
-
-	dist := point.Dot(plane.Normal) - plane.Distance
-
-	if dist > vmath.TEST_EPSILON {
-		return PointInLeaf( int(node.Children[0]), point )
-	} else if dist < -vmath.TEST_EPSILON {
-		return PointInLeaf( int(node.Children[1]), point )
-	} else {
-		pTest := PointInLeaf( int(node.Children[0]), point );
-		if pTest.Cluster != -1 {
-			return pTest
-		}
-
-		return PointInLeaf( int(node.Children[1]), point );
-	}
 }
 
 func SubdividePatch(ndxPatch int) {

@@ -43,7 +43,7 @@
     "primitives/worldlight",
     "versions"
   ]
-  revision = "d855e6b95e6034da629c28f3cc7e795c933fd996"
+  revision = "c0a00488849ca2964391f095193b60e6303e08ee"
 
 [[projects]]
   branch = "master"
@@ -75,6 +75,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f032337dcf8ecde69f0c38c4feff43cf950ded85a74f416280ba1bd7ac2bd025"
+  inputs-digest = "66f2e5b1c486aaeb555c69695d12f8d7c8e4cce604b3b40bd3e8baddccb5aad6"
   solver-name = "gps-cdcl"
   solver-version = 1
