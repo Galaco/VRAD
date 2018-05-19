@@ -9,6 +9,7 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/galaco/vrad/common/constants/compiler"
 	"github.com/galaco/bsp/primitives/vertnormal"
+	"github.com/galaco/vrad/vmath/polygon"
 )
 
 const SMOOTHING_GROUP_HARD_EDGE	= 0xff000000
@@ -90,10 +91,9 @@ func PairEdges() {
 		// set displacement surface flag
 		fn.HasDisp = false
 		// @TODO Add Displacement support
-/*		if ValidDispFace( f ) {
+		if polygon.ValidDispFace(f) == true {
 			fn.HasDisp = true
 		}
-*/
 	}
 
 	if compiler.DEBUG == true {
