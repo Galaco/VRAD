@@ -10,10 +10,10 @@ var facePatches [constants.MAX_MAP_FACES]int
 var faceParents [constants.MAX_MAP_FACES]int
 var clusterChildren [constants.MAX_MAP_CLUSTERS]int
 
-func AddPatchToCache(patch *types.Patch) *types.Patch{
+func AddPatchToCache(patch *types.Patch) int {
 	patches = append(patches, *patch)
 
-	return &(patches[(len(patches)-1)])
+	return len(patches)-1
 }
 
 func GetPatches() *[]types.Patch{

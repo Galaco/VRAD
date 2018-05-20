@@ -354,14 +354,14 @@ func ClipWindingEpsilon(in *polygon.Winding, normal *mgl32.Vec3, dist float32,
 // Purpose: subdivide the "parent" patch
 //-----------------------------------------------------------------------------
 func CreateChildPatch(nParentIndex int, winding *polygon.Winding, flArea float32, vecCenter *mgl32.Vec3) int {
+	var child *types.Patch
+	nChildIndex := cache.AddPatchToCache(&types.Patch{})
+
+	child = &((*cache.GetPatches())[nChildIndex])
 	parent := &((*cache.GetPatches())[nParentIndex])
 
 	// copy all elements of parent patch to children
-	child := *parent
-
-	//NOTE: Copying the parent may be better than creating child and copying contents ( see *child = *parent)
-	cache.AddPatchToCache(&child)
-	nChildIndex := len(*cache.GetPatches())// - 1
+	*child = *parent
 
 	// Set up links
 	child.NdxNext = constants.CONSTRUCTS_INVALID_INDEX
