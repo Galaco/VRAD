@@ -20,8 +20,11 @@ const numBounce = 2
 // @TODO replace this with -fast cmd flag
 const do_fast = false
 
+var SUbDivideCOunt = 0
+
 func SubdividePatches() {
 	var num uint32 //unsigned
+	var patch *types.Patch
 
 	if numBounce == 0 {
 		return
@@ -45,15 +48,15 @@ func SubdividePatches() {
 	}
 
 	for i := 0 ; i < uiPatchCount; i++ {
-		patch := &(*cache.GetPatches())[i]
+		patch = &((*cache.GetPatches())[i])
 		patch.Parent = -1
-		if PreventSubdivision(patch) {
+		if PreventSubdivision(patch) == true {
 			continue
 		}
 
 		// @TODO Allow FAST compile
 		// This true should actually be derived from the -fast cmd flag
-		if  !do_fast {
+		if  false == do_fast {
 			if (*cache.GetTargetFaces())[patch.FaceNumber].DispInfo == -1 {
 				SubdividePatch(i)
 			} else {
@@ -162,15 +165,16 @@ func PreventSubdivision( patch *types.Patch ) bool {
 
 func SubdividePatch(ndxPatch int) {
 	var w, o1, o2 *polygon.Winding
+	var patch *types.Patch
 	var shouldSubDivide bool
 	widest := float32(-1)
-	widest_axis := -1
+	widestAxis := -1
 
 	// get the current patch
-	if len(*cache.GetPatches()) < ndxPatch {
-		return
-	}
-	patch := &((*cache.GetPatches())[ndxPatch])
+	//if len(*cache.GetPatches()) < ndxPatch {
+	//	return
+	//}
+	patch = &((*cache.GetPatches())[ndxPatch])
 	if patch == nil {
 		return
 	}
@@ -186,10 +190,9 @@ func SubdividePatch(ndxPatch int) {
 	total := patch.Maxs.Sub(patch.Mins)
 	vector.Scale(&total, patch.LuxScale, &total)
 
-
-	for i := 0; i<3 ; i++ {
+	for i := 0; i < 3; i++ {
 		if total[i] > widest {
-			widest_axis = i
+			widestAxis = i
 			widest = total[i]
 		}
 
@@ -198,9 +201,9 @@ func SubdividePatch(ndxPatch int) {
 		}
 	}
 
-	if (!shouldSubDivide) && widest_axis != -1 {
+	if (!shouldSubDivide) && widestAxis != -1 {
 		// make more square
-		if total[widest_axis] > total[(widest_axis + 1) % 3] * 2 && total[widest_axis] > total[(widest_axis + 2) % 3] * 2 {
+		if (total[widestAxis] > total[(widestAxis + 1) % 3] * 2) && (total[widestAxis] > total[(widestAxis + 2) % 3] * 2) {
 			if patch.Chop > minChop {
 				shouldSubDivide = true
 				patch.Chop = float32(math.Max( float64(minChop), float64(patch.Chop / 2)))
@@ -214,8 +217,8 @@ func SubdividePatch(ndxPatch int) {
 
 	// split the winding
 	split := mgl32.Vec3{0,0,0}
-	split[widest_axis] = 1
-	dist := (patch.Mins[widest_axis] + patch.Maxs[widest_axis]) * 0.5
+	split[widestAxis] = 1
+	dist := (patch.Mins[widestAxis] + patch.Maxs[widestAxis]) * 0.5
 	ClipWindingEpsilon(w, &split, dist, vmath.ON_EPSILON, &o1, &o2)
 
 	// calculate the area of the patches to see if they are "significant"
@@ -229,8 +232,14 @@ func SubdividePatch(ndxPatch int) {
 	}
 
 	// create new child patches
-	ndxChild1Patch := CreateChildPatch( ndxPatch, o1, area1, &center1)
-	ndxChild2Patch := CreateChildPatch( ndxPatch, o2, area2, &center2)
+	ndxChild1Patch := CreateChildPatch(ndxPatch, o1, area1, &center1)
+	ndxChild2Patch := CreateChildPatch(ndxPatch, o2, area2, &center2)
+
+	SUbDivideCOunt++
+	cpt := SUbDivideCOunt
+	if cpt < 0 {
+
+	}
 
 	// FIXME: This could go into CreateChildPatch if child1, child2 were stored in the patch as child[0], child[1]
 	patch = &((*cache.GetPatches())[ndxPatch])
@@ -241,8 +250,7 @@ func SubdividePatch(ndxPatch int) {
 	SubdividePatch(ndxChild2Patch)
 }
 
-
-func ClipWindingEpsilon (in *polygon.Winding, normal *mgl32.Vec3, dist float32,
+func ClipWindingEpsilon(in *polygon.Winding, normal *mgl32.Vec3, dist float32,
 				epsilon float32, front **polygon.Winding, back **polygon.Winding) {
 	var	dists [constants.MAX_POINTS_ON_WINDING + 4]float32
 	var	sides [constants.MAX_POINTS_ON_WINDING + 4]int
@@ -353,7 +361,7 @@ func CreateChildPatch(nParentIndex int, winding *polygon.Winding, flArea float32
 
 	//NOTE: Copying the parent may be better than creating child and copying contents ( see *child = *parent)
 	cache.AddPatchToCache(&child)
-	nChildIndex := len(*cache.GetPatches())
+	nChildIndex := len(*cache.GetPatches())// - 1
 
 	// Set up links
 	child.NdxNext = constants.CONSTRUCTS_INVALID_INDEX
@@ -371,7 +379,7 @@ func CreateChildPatch(nParentIndex int, winding *polygon.Winding, flArea float32
 	//@TODO Displacement disabled
 	// Apparently this condition shouldnt be met anyway
 	// But WE dont know that yet
-	if 1 == 2 { //ValidDispFace( g_pFaces + child.FaceNumber ) {
+	if polygon.ValidDispFace(&(*cache.GetTargetFaces())[child.FaceNumber]) == true {
 		// shouldn't get here anymore!!
 		log.Printf("SubdividePatch: Error - Should not be here!\n")
 		//StaticDispMgr()->GetDispSurfNormal( child.FaceNumber, child.Origin, child.Normal, true )
@@ -394,12 +402,12 @@ func CreateChildPatch(nParentIndex int, winding *polygon.Winding, flArea float32
 		for i := 0; i < 3; i++ {
 			if (child.FaceMaxs[i] == child.Maxs[i] || child.FaceMins[i] == child.Mins[i] ) && total[i] > minChop {
 				child.Chop = float32(math.Max( float64(minChop), float64(child.Chop / 2)))
-				break;
+				break
 			}
 		}
 	}
 
-	return nChildIndex;
+	return nChildIndex
 }
 
 

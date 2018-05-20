@@ -59,8 +59,8 @@ func MakePatchForFace(fn int, w *polygon.Winding) {
 	// get a patch
 
 	cache.AddPatchToCache(&types.Patch{})
-	ndxPatch := len(*cache.GetPatches())
-	patch = &(*cache.GetPatches())[ndxPatch-1]
+	ndxPatch := len(*cache.GetPatches()) - 1
+	patch = &((*cache.GetPatches())[ndxPatch])
 	patch.NdxNext = vrad_constants.CONSTRUCTS_INVALID_INDEX
 	patch.NdxNextParent = vrad_constants.CONSTRUCTS_INVALID_INDEX
 	patch.NdxNextClusterChild = vrad_constants.CONSTRUCTS_INVALID_INDEX
@@ -117,6 +117,7 @@ func MakePatchForFace(fn int, w *polygon.Winding) {
  */
 
 	patch.Winding = w
+
 	patch.Plane = &(cache.GetLumpCache().Planes[f.Planenum])
 
 	// make a new plane to adjust for origined bmodels
@@ -153,8 +154,8 @@ func MakePatchForFace(fn int, w *polygon.Winding) {
 	patch.Normal = patch.Plane.Normal
 
 	polygon.WindingBounds(w, &(patch.FaceMins), &(patch.FaceMaxs))
-	patch.FaceMins = patch.Mins
-	patch.FaceMaxs = patch.Maxs
+	patch.Mins = patch.FaceMins
+	patch.Maxs = patch.FaceMaxs
 
 	BaseLightForFace(f, &patch.BaseLight, &patch.BaseArea, &patch.Reflectivity)
 
@@ -166,10 +167,9 @@ func MakePatchForFace(fn int, w *polygon.Winding) {
 
 	// @TODO ADD DISPLACEMENT SUPPORT
 	// get rid of do extra functionality on displacement surfaces
-/*	if ValidDispFace( f ) {
+	if polygon.ValidDispFace(f){
 		patch.Chop = maxChop
 	}
-*/
 
 	// @TODO GALACOS_PORT_NOTE
 	// Below note copied from Valve implementation
