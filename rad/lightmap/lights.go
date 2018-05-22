@@ -182,7 +182,7 @@ func ParseLightGeneric(e *types.Entity, dl *types.DirectLight) {
 
 	// check angle, targets
 	target = e.ValueForKey("target")
-	if target[0] != 0 {    // point towards target
+	if target != "" {    // point towards target
 		e2 = cache.FindTargetEntity(target)
 		if e2 == nil {
 			log.Printf("WARNING: light at (%d %d %d) has missing target\n",

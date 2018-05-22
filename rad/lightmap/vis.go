@@ -37,7 +37,7 @@ func GetVisCache( lastOffset int, cluster int, pvs *[]byte) int {
 				}
 
 				visRunlength := cache.GetLumpCache().VisDataRaw[thisOffset:]
-				DecompressVis(&visRunlength, pvs)
+				pvs = DecompressVis(&visRunlength, len(*pvs))
 			}
 			lastOffset = thisOffset
 		}
@@ -50,24 +50,25 @@ func GetVisCache( lastOffset int, cluster int, pvs *[]byte) int {
 DecompressVis
 ===================
 */
-func DecompressVis(in *[]byte, decompressed *[]byte) *[]byte {
+func DecompressVis(in *[]byte, length int) *[]byte {
 	var c int
-	var out []byte
+	var out = make([]byte, length)
 	var row int
 	var inOffset = 0
 	var outOffset = 0
 
 	row = int((cache.GetLumpCache().Visibility).NumClusters + 7) >> 3
-	out = *decompressed
 
 	hasSimulatedDoWhile := false
-	for (int(out[outOffset])) < row || hasSimulatedDoWhile == false {
+	for (outOffset < len(out) && int(out[outOffset]) < row) || hasSimulatedDoWhile == false {
 		hasSimulatedDoWhile = true
 
-		if int((*in)[inOffset]) > 0 {
+		// @NOTE The ++ lines may need to shiftto the stop
+		// This will cause an out-of-bounds unless we compare to len()-1
+		if inOffset < len(*in) {
+			out[outOffset] = (*in)[inOffset]
 			inOffset++
 			outOffset++
-			out[outOffset] = (*in)[inOffset]
 			continue
 		}
 
@@ -82,7 +83,7 @@ func DecompressVis(in *[]byte, decompressed *[]byte) *[]byte {
 			log.Printf("warning: Vis decompression overrun\n")
 		}
 
-		for c != 0 {
+		for c > 0 {
 			outOffset++
 			out[outOffset] = 0
 			c--
