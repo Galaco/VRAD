@@ -31,6 +31,7 @@ type LumpCache struct {
 	TexInfo []texinfo.TexInfo
 	Faces []face.Face
 	Leafs []leaf.Leaf
+	LeafFaces []uint16
 	LeafBrushes []uint16
 	Edges [][2]uint16
 	SurfEdges []int32
@@ -64,6 +65,7 @@ func BuildLumpCache(fileName string, file *bsp.Bsp) *LumpCache {
 	lumpCache.TexInfo = *(*file.GetLump(bsp.LUMP_TEXINFO).GetContents()).GetData().(*[]texinfo.TexInfo)
 	lumpCache.Faces = *(*file.GetLump(bsp.LUMP_FACES).GetContents()).GetData().(*[]face.Face)
 	lumpCache.Leafs = *(*file.GetLump(bsp.LUMP_LEAFS).GetContents()).GetData().(*[]leaf.Leaf)
+	lumpCache.LeafFaces = *(*file.GetLump(bsp.LUMP_LEAFFACES).GetContents()).GetData().(*[]uint16)
 	lumpCache.LeafBrushes = *(*file.GetLump(bsp.LUMP_LEAFBRUSHES).GetContents()).GetData().(*[]uint16)
 	lumpCache.Edges = *(*file.GetLump(bsp.LUMP_EDGES).GetContents()).GetData().(*[][2]uint16)
 	lumpCache.SurfEdges = *(*file.GetLump(bsp.LUMP_SURFEDGES).GetContents()).GetData().(*[]int32)

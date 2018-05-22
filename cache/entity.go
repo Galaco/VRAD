@@ -17,3 +17,18 @@ func GetEntity(index int) *types.Entity {
 func GetAllEntities() *[]types.Entity {
 	return &entityList
 }
+/*
+  ==================
+  FindTargetEntity
+  ==================
+*/
+func FindTargetEntity (target string) *types.Entity {
+	for i := 0 ; i < len(entityList) ; i++ {
+		n := entityList[i].ValueForKey("targetname")
+		if n == target {
+			return &entityList[i]
+		}
+	}
+
+	return nil
+}

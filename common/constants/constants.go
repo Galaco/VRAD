@@ -16,5 +16,12 @@ const CONSTRUCTS_INVALID_INDEX = -1
 const MAX_POINTS_ON_WINDING = 64
 const NUM_BUMP_VECTS = 3
 
+const ANGLE_UP = -1
+const ANGLE_DOWN = -2
+
+const PITCH = 0
+const YAW = 1
+const ROLL = 2
+
 
 const TEMPCONST_NUM_THREADS = 1
