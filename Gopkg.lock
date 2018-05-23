@@ -68,6 +68,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/mengzhuo/intrinsic"
+  packages = ["sse2"]
+  revision = "34b800838e0bcd9c5b6abd414e3ad03dc1a686b8"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/image"
   packages = ["math/f32"]
   revision = "f315e440302883054d0c2bd85486878cb4f8572c"
@@ -75,6 +81,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "66f2e5b1c486aaeb555c69695d12f8d7c8e4cce604b3b40bd3e8baddccb5aad6"
+  inputs-digest = "ae48e9dbecaf7cacaae64ee39a33caddfd66be77efbfac51f1d5cc6c49c70810"
   solver-name = "gps-cdcl"
   solver-version = 1

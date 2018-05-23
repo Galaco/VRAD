@@ -12,6 +12,12 @@ import (
 	"github.com/galaco/vrad/vmath/polygon"
 	"github.com/galaco/bsp/flags"
 	"github.com/galaco/bsp/primitives/leaf"
+	constants2 "github.com/galaco/vrad/common/constants"
+	"github.com/galaco/vrad/vmath"
+	"math"
+	"github.com/galaco/vrad/vmath/ssemath"
+	"github.com/galaco/vrad/raytracer/trace"
+	"github.com/galaco/vrad/vmath/ssemath/simd"
 )
 
 const SMOOTHING_GROUP_HARD_EDGE	= 0xff000000
@@ -353,7 +359,7 @@ func BuildVisForLightEnvironment() {
 
 	// Must set the bits in a separate pass so as to not flood-fill LEAF_FLAGS_SKY everywhere
 	// pLeafbits is a bit array of all leaves that need to be marked as seeing sky
-	for iLeaf := 0; iLeaf < len(cache.GetLumpCache().Leafs); iLeaf++{
+	for iLeaf := 0; iLeaf < len(cache.GetLumpCache().Leafs); iLeaf++ {
 		// If this leaf has light (3d skybox) in it, then don't bother
 		if 0 != cache.GetLumpCache().Leafs[iLeaf].Flags() & leaf.LEAF_FLAGS_SKY {
 			continue
@@ -379,12 +385,12 @@ func BuildVisForLightEnvironment() {
 		} else {
 			// if radial vis was used on this leaf some of the portals leading
 			// to sky may have been culled.  Try tracing to find sky.
-			if 0 != cache.GetLumpCache().Leafs[iLeaf].Flags() & leaf.LEAF_FLAGS_RADIAL {
-/*				if CanLeafTraceToSky(iLeaf) {
+			if 0 != (cache.GetLumpCache().Leafs[iLeaf].Flags() & leaf.LEAF_FLAGS_RADIAL) {
+				if true == CanLeafTraceToSky(iLeaf) {
 					// FIXME: Should make a version that checks if we hit 2D skyboxes.. oh well.
 					cache.GetLumpCache().Leafs[iLeaf].SetFlags(
 						cache.GetLumpCache().Leafs[iLeaf].Flags() | leaf.LEAF_FLAGS_SKY)
-				}*/
+				}
 			}
 		}
 	}
@@ -414,35 +420,32 @@ func PVSCheck(pvs *[]byte, iCluster int) byte {
 	}
 }
 
-/*
 // NOTE: This is just a heuristic.  It traces a finite number of rays to find sky
 // NOTE: Full vis is necessary to make this 100% correct.
-bool CanLeafTraceToSky( int iLeaf )
-{
+func CanLeafTraceToSky(iLeaf int) bool {
 	// UNDONE: Really want a point inside the leaf here.  Center is a guess, may not be in the leaf
 	// UNDONE: Clip this to each plane bounding the leaf to guarantee
-	Vector center = vec3_origin;
-	for ( int i = 0; i < 3; i++ )
-	{
-		center[i] = ( (float)(dleafs[iLeaf].mins[i] + dleafs[iLeaf].maxs[i]) ) * 0.5f;
+	center := mgl32.Vec3{0,0,0}
+	for i := 0; i < 3; i++ {
+		center[i] = float32(cache.GetLumpCache().Leafs[iLeaf].Mins[i] + cache.GetLumpCache().Leafs[iLeaf].Maxs[i] ) * 0.5
 	}
 
-	FourVectors center4, delta;
-	fltx4 fractionVisible;
-	for ( int j = 0; j < NUMVERTEXNORMALS; j+=4 )
-	{
+	var center4, delta ssemath.FourVectors
+	var fractionVisible simd.Flt4x
+	for j := 0; j < vmath.NUMVERTEXNORMALS; j+=4 {
 		// search back to see if we can hit a sky brush
-		delta.LoadAndSwizzle( g_anorms[j], g_anorms[min( j+1, NUMVERTEXNORMALS-1 )],
-			g_anorms[min( j+2, NUMVERTEXNORMALS-1 )], g_anorms[min( j+3, NUMVERTEXNORMALS-1 )] );
-		delta *= -MAX_TRACE_LENGTH;
-		delta += center4;
+		delta.LoadAndSwizzle(&vmath.Anorms[j], &vmath.Anorms[int(math.Min(float64(j + 1), vmath.NUMVERTEXNORMALS-1))],
+			&vmath.Anorms[int(math.Min(float64(j + 2), vmath.NUMVERTEXNORMALS - 1))],
+			&vmath.Anorms[int(math.Min(float64(j + 3), vmath.NUMVERTEXNORMALS - 1))])
+		delta = delta.Multiply(-constants2.MAX_TRACE_LENGTH)
+		delta = delta.Add4Vectors(center4)
 
 		// return true if any hits sky
-		TestLine_DoesHitSky ( center4, delta, &fractionVisible );
-		if ( TestSignSIMD ( CmpGtSIMD ( fractionVisible, Four_Zeros ) ) )
-			return true;
+		trace.TestLineDoesHitSky(&center4, delta, &fractionVisible, true, -1, false)
+		if 0 != simd.TestSignSIMD(simd.CmpGtSIMD(&fractionVisible, &ssemath.FourZeros) ) {
+			return true
+		}
 	}
 
-	return false;
+	return false
 }
- */
