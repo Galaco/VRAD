@@ -15,6 +15,7 @@ import (
 	"github.com/galaco/vrad/rad/lightmap"
 	"time"
 	"github.com/galaco/vrad/common/constants/compiler"
+	"github.com/galaco/vrad/rad/cameras"
 )
 
 func Start(config *cmd.Args) {
@@ -80,7 +81,6 @@ func Start(config *cmd.Args) {
 		lightmap.PairEdges()
 	}
 
-
 	// store the vertex normals calculated in PairEdges
 	// so that the can be written to the bsp file for
 	// use in the engine
@@ -96,7 +96,7 @@ func Start(config *cmd.Args) {
 	lightmap.CreateDirectLights()
 
 	// set up sky cameras
-	//ProcessSkyCameras()
+	cameras.ProcessSkyCameras()
 }
 
 func UpdateAllFaceLightmapExtents() {

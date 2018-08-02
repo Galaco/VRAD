@@ -152,7 +152,7 @@ func Main(args *cmd.Args, transfered interface{}) (interface{}, error) {
 	rad.Start(args)
 
 	// Setup incremental lighting.
-/* @TODO Not supported yet.
+/* @TODO Not supported yet. Is probably useless for all intents and purposes
 	if g_pIncremental == true {
 		if !g_pIncremental.Init( args.Filename, incrementfile ) {
 			log.Println("Unable to load incremental lighting file in %s.\n", incrementfile)

@@ -35,17 +35,30 @@ func (f *FourVectors) Add4Vectors(b FourVectors) FourVectors{
 	return *f
 }
 
+func (f FourVectors) Sub(b FourVectors) FourVectors {
+	var retVal = f
+	retVal.X = simd.SubSIMD(f.X,b.X)
+	retVal.Y = simd.SubSIMD(f.Y,b.Y)
+	retVal.Z = simd.SubSIMD(f.Z,b.Z)
 
-func (f *FourVectors) MultiplyFV(b FourVectors) {
+	return retVal
+}
+
+
+func (f *FourVectors) MultiplyFV(b FourVectors) *FourVectors {
 	f.X = simd.MulSIMD(f.X, b.X)
 	f.Y = simd.MulSIMD(f.Y, b.Y)
 	f.Z = simd.MulSIMD(f.Z, b.Z)
+
+	return f
 }
 
-func (f *FourVectors) MultiplyFlt4x(scale simd.Flt4x) {
+func (f *FourVectors) MultiplyFlt4x(scale simd.Flt4x) *FourVectors {
 	f.X = simd.MulSIMD(f.X, scale)
 	f.Y = simd.MulSIMD(f.Y, scale)
 	f.Z = simd.MulSIMD(f.Z, scale)
+
+	return f
 }
 
 func (f *FourVectors) Multiply(scale float32) FourVectors {
@@ -53,6 +66,57 @@ func (f *FourVectors) Multiply(scale float32) FourVectors {
 	f.MultiplyFlt4x(scalepacked)
 
 	return *f
+}
+
+func (f *FourVectors) MultiplySelf(b FourVectors) simd.Flt4x {
+	dot := simd.MulSIMD(f.X, b.X)
+	dot = simd.MaddSIMD(f.Y,b.Y, dot)
+	dot = simd.MaddSIMD(f.Z,b.Z, dot)
+	return dot
+}
+
+/// normalize all 4 vectors in place.
+func (f *FourVectors) VectorNormalize() {
+	magSq := (*f).MultiplySelf(*f)						// length^2
+	f.MultiplyFlt4x(simd.ReciprocalSqrtSIMD(&magSq))	// *(1.0/sqrt(length^2))
+}
+
+/// return the approximate length of all 4 vectors. uses the sqrt approximation instruction
+func (f FourVectors) Length() simd.Flt4x {
+	return simd.SqrtEstSIMD((f.length2()))
+}
+
+func (f FourVectors) length2() simd.Flt4x {
+	return f.MultiplySelf(f)
+}
+
+func (f *FourVectors) DuplicateVector(v *mgl32.Vec3) { //< set all 4 vectors to the same vector value
+	f.X = simd.ReplicateX4(v.X())
+	f.Y = simd.ReplicateX4(v.Y())
+	f.Z = simd.ReplicateX4(v.Z())
+}
+
+func (f *FourVectors) Vec(idx int) *mgl32.Vec3 {						//< unpack one of the vectors
+	return &mgl32.Vec3{
+		f.VecX(idx),
+		f.VecY(idx),
+		f.VecZ(idx),
+	}
+}
+
+
+// X(),Y(),Z() - get at the desired component of the i'th (0..3) vector.
+func (f *FourVectors) VecX(idx int) float32 {
+// NOTE: if the output goes into a register, this causes a Load-Hit-Store stall (don't mix fpu/vpu math!)
+	return *simd.SubFloat(&f.X, idx)
+}
+
+func (f *FourVectors) VecY(idx int) float32 {
+	return *simd.SubFloat(&f.Y, idx )
+}
+
+func (f *FourVectors) VecZ(idx int) float32 {
+	return *simd.SubFloat(&f.Z, idx )
 }
 
 /*

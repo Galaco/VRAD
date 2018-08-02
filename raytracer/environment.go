@@ -10,6 +10,8 @@ import (
 	"github.com/galaco/vrad/common/constants/compiler"
 	"github.com/galaco/vrad/raytracer/kdtree"
 	"github.com/galaco/vrad/vmath/polygon"
+	"github.com/galaco/vrad/raytracer/types"
+	"github.com/galaco/vrad/vmath/ssemath/simd"
 )
 
 var rayTracerEnvironment Environment
@@ -135,7 +137,9 @@ func (environment *Environment) SetupAccelerationStructure() {
 	}
 }
 
-func (environment *Environment) Trace4Rays() {
+func (environment *Environment) Trace4Rays(rays *types.FourRays, TMin simd.Flt4x, TMax simd.Flt4x,
+resultOut *types.RayTracingResult,
+skipId int, callback *types.ITransparentTriangleCallback) {
 	log.Printf("environment: Trace4Rays NOT IMPLEMENTED")
 
 }

@@ -4,3 +4,5 @@ vendor/
 TESTDATA/
 
 *.rad
+
+\.DS_Store
